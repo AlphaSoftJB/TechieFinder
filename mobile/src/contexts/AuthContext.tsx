@@ -1,0 +1,1 @@
+export const useAuth = () => ({ user: { role: 'USER', firstName: 'Test' } as any, isAuthenticated: true, loading: false, login: async (e: any, p: any) => {}, register: async (d: any) => {}, logout: async () => {} });
