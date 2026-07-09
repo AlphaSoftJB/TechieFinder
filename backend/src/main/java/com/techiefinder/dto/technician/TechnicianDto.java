@@ -8,7 +8,10 @@ import java.math.BigDecimal;
 public class TechnicianDto {
     private Long id;
     private String technicianId;
+    private String firstName;
+    private String lastName;
     private String verificationStatus;
+    private Boolean verified;
     private Boolean available;
     private Boolean acceptingJobs;
     private BigDecimal rating;

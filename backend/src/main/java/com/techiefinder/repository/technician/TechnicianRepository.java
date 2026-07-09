@@ -3,6 +3,7 @@ package com.techiefinder.repository.technician;
 import com.techiefinder.model.technician.Technician;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -17,4 +18,8 @@ public interface TechnicianRepository extends JpaRepository<Technician, Long> {
 
     @Query("SELECT t FROM Technician t WHERE t.available = true AND t.acceptingJobs = true")
     List<Technician> findAvailableTechnicians();
+
+    @Query("SELECT DISTINCT t FROM Technician t JOIN t.services s " +
+           "WHERE t.available = true AND t.acceptingJobs = true AND s.category.slug = :categorySlug")
+    List<Technician> findAvailableByCategorySlug(@Param("categorySlug") String categorySlug);
 }

@@ -33,7 +33,7 @@ public class AuthService {
     @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already exists");
+            throw new IllegalStateException("Email already exists");
         }
 
         User user = User.builder()
@@ -67,6 +67,8 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .userId(user.getId())
                 .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .role(user.getRole().name())
                 .build();
     }
@@ -87,6 +89,8 @@ public class AuthService {
                 .refreshToken(refreshToken)
                 .userId(user.getId())
                 .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .role(user.getRole().name())
                 .build();
     }
