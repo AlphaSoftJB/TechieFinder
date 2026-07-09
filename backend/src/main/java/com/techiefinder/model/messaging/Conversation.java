@@ -2,6 +2,7 @@ package com.techiefinder.model.messaging;
 
 import com.techiefinder.model.BaseEntity;
 import com.techiefinder.model.booking.Booking;
+import com.techiefinder.model.technician.Technician;
 import com.techiefinder.model.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -25,7 +26,7 @@ public class Conversation extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "technician_id", nullable = false)
-    private User technician;
+    private Technician technician;
 
     @ManyToOne
     @JoinColumn(name = "booking_id")

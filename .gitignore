@@ -1,0 +1,20 @@
+# Backend (Maven)
+backend/target/
+*.class
+
+# Mobile (Expo/React Native)
+mobile/node_modules/
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+
+# Logs
+*.log

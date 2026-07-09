@@ -46,6 +46,7 @@ public class Payment extends BaseEntity {
 
     private String gatewayReference; // Reference from payment gateway
 
+    @Column(length = 2000)
     private String gatewayResponse; // JSON response from gateway
 
     private LocalDateTime paidAt;
