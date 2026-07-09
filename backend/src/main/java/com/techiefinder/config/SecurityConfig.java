@@ -70,6 +70,16 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**"),
                                 new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/ws/**")).permitAll()
+                        // A technician's own profile/offerings must stay authenticated even though
+                        // the general browsing patterns below would otherwise match them too --
+                        // Spring Security takes the first matching rule, so these have to come first.
+                        .requestMatchers(new AntPathRequestMatcher("/api/technicians/me", "GET"),
+                                new AntPathRequestMatcher("/api/technicians/me/services", "GET")).authenticated()
+                        // Public browsing: anyone can search/view technicians, their offerings, and
+                        // their reviews before creating an account -- matches the Home page's
+                        // "Find a technician" CTA, which is shown to guests.
+                        .requestMatchers(new AntPathRequestMatcher("/api/technicians/**", "GET")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/api/ratings/technician/**", "GET")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/admin/**")).hasRole("ADMIN")
                         .requestMatchers(new AntPathRequestMatcher("/api/technician/**")).hasAnyRole("TECHNICIAN", "ADMIN")
                         .anyRequest().authenticated()

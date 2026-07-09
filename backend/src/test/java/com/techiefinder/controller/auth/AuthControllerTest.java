@@ -110,4 +110,21 @@ class AuthControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string("TechieFinder API is running"));
     }
+
+    @Test
+    void technicianBrowsingEndpointsAreReadableWithoutAuth() throws Exception {
+        // Guests must be able to browse technicians before creating an account --
+        // this is what the Home page's "Find a technician" CTA implies for anyone
+        // who hasn't logged in yet.
+        mockMvc.perform(get("/api/technicians/available")).andExpect(status().isOk());
+        mockMvc.perform(get("/api/technicians/nearby?latitude=6.5&longitude=3.3&radiusKm=15")).andExpect(status().isOk());
+    }
+
+    @Test
+    void technicianOwnProfileEndpointsStillRequireAuth() throws Exception {
+        // /me and /me/services must NOT be swept up by the general technician
+        // browsing permitAll rule above, since they return the caller's own data.
+        mockMvc.perform(get("/api/technicians/me")).andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/technicians/me/services")).andExpect(status().isForbidden());
+    }
 }
