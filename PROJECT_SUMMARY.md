@@ -2,269 +2,110 @@
 
 ## Overview
 
-**TechieFinder** is a production-ready platform connecting Nigerian users with verified local technicians and skilled professionals. The platform includes a Spring Boot backend API, React web application, and React Native mobile applications for iOS and Android.
+**TechieFinder** connects Nigerian users with local technicians and skilled
+professionals. The platform is a Spring Boot backend API, a React web app, and
+a React Native (Expo) mobile app, all working end-to-end against real data —
+not a scaffold of entities with no working API surface.
 
 **GitHub Repository:** https://github.com/AlphaSoftJB/TechieFinder
 
----
-
-## What Has Been Delivered
-
-### ✅ Backend API (Spring Boot + Java 17)
-
-**Complete Implementation:**
-- JWT-based authentication and authorization
-- User management (registration, login, profile management)
-- Technician management (profiles, services, availability, portfolio, certifications)
-- Booking system with status management
-- Payment entity models
-- Rating and review system
-- Messaging system entities
-- Notification system entities
-- RESTful API endpoints for all operations
-- MySQL database with 15+ entity tables
-- Spring Security configuration
-- JPA repositories with custom queries
-- Service layer with business logic
-- DTO pattern for data transfer
-- BCrypt password hashing
-- CORS configuration
-
-**Technology Stack:**
-- Spring Boot 3.1.5
-- Java 17
-- MySQL 8.0+
-- JWT (jjwt 0.11.5)
-- Maven 3.8+
-- Lombok
-
-**Status:** ✅ Fully functional and tested. Backend compiles successfully and can be deployed.
+This document reflects the platform's actual, verified state. An earlier
+version of this file claimed a "production-ready," fully complete platform
+with specific file/endpoint counts; those claims did not match the repository
+(no build file existed, most of the backend's controllers/services/repositories
+were entirely absent, and the web frontend didn't exist anywhere in the repo or
+its history). This version was rewritten after building out and verifying what's
+described below.
 
 ---
 
-### ✅ Web Frontend (React 19 + Tailwind CSS)
+## What Actually Works Today
 
-**Complete Implementation:**
-- Modern, responsive design with Nigerian-inspired color scheme (green & orange)
-- Home page with hero section and service showcase
-- User authentication (login and registration)
-- Technician search with advanced filters (category, location, rating)
-- Technician profile pages with portfolio, certifications, and reviews
-- User dashboard with booking management
-- Technician dashboard with job management and earnings display
-- Booking creation workflow
-- API client with JWT token management
-- AuthContext for global authentication state
-- Error handling and loading states
-- Mobile-responsive design
-- Toast notifications
+### Backend API (Spring Boot 3.1.5 + Java 17)
+- JWT-based authentication (register/login), BCrypt password hashing, role-based
+  access control (`USER`/`TECHNICIAN`/`ADMIN`)
+- Technician profiles, service offerings (category-linked), location + geo-radius
+  search, category search
+- Full booking lifecycle: create → confirm/reject → in-progress → complete,
+  with ownership checks on every transition
+- Wallet-based payment settlement (real Paystack/Flutterwave gateway calls are
+  not yet wired up — see `service/payment/PaymentService.java`)
+- Ratings (one per completed booking, technician's average recalculated
+  automatically) and in-app messaging (conversations + messages)
+- Notifications fired on booking/payment/rating/message events
+- A global exception handler mapping not-found/conflict/forbidden/validation
+  errors to proper HTTP status codes
+- **Status:** compiles, runs, and passes its test suite. Verified by hand
+  (curl) and by an automated integration test that runs the entire booking
+  lifecycle above end-to-end.
 
-**Technology Stack:**
-- React 19
-- Tailwind CSS 4
-- Wouter (routing)
-- shadcn/ui (components)
-- Lucide React (icons)
-- TypeScript
+### Web App (React 19 + Vite + Tailwind CSS 4)
+- Home (categories + featured technicians), Login, Register, Search (category
+  filter + "Near Me" geo search via the browser's Geolocation API), Technician
+  Profile (ratings, service offerings, booking form, messaging), Dashboard
+  (role-routed to a user or technician view), Conversation (messaging)
+- **Status:** builds cleanly (`tsc -b && vite build`) and was verified with a
+  real, scripted browser session (Playwright) driving the entire golden path
+  against the live backend — not just a compile check.
 
-**Status:** ✅ Fully functional. All pages implemented and working. Deployed and accessible.
+### Mobile App (React Native 0.81 + Expo 54)
+- The same feature set as the web app, native: Login/Register, Home, Search
+  (with device-location "Near Me"), Technician Profile, dashboards for both
+  roles, Chat
+- **Status:** installs, type-checks, and bundles cleanly via Metro
+  (`expo export`). Its own test suite passes. Full interactive verification in
+  a simulator/device wasn't possible in the sandboxed environment this was
+  built in — that's the one gap in verification depth versus the web app.
+
+### Tests
+- Backend: 8 tests (JUnit + MockMvc + a full booking-lifecycle integration
+  test), all passing
+- Mobile: 7 tests (Jest + React Native Testing Library, `AuthContext` +
+  `LoginScreen`), all passing
+- Web: no unit tests yet — CI runs a full production build on every push, and
+  the golden path was verified with Playwright during development
+
+### DevOps
+- `backend/Dockerfile`, `web/Dockerfile` + `nginx.conf`, `docker-compose.yml`
+  (MySQL + backend + web), `.github/workflows/ci.yml` (backend/mobile/web),
+  `.env.example` with variable names that actually match the code
+- The Dockerfile/compose setup was validated via `docker compose config` and
+  by confirming the exact Maven command the backend's Dockerfile runs
+  succeeds — `docker compose up --build` itself hasn't been run in an
+  environment with Docker Hub access; do that once before depending on it
 
 ---
 
-### ✅ Mobile Applications (React Native + Expo)
+## Not Yet Built
 
-**Complete Implementation:**
-- Project structure with Expo 50
-- Navigation system (Stack + Tab navigators)
-- Authentication context and state management
-- API client with JWT authentication
-- Screen structure for all major features
-- Camera integration configuration
-- Push notification configuration
-- AsyncStorage for local data persistence
-- iOS and Android configuration
-- Build configuration for App Store and Google Play
-
-**Technology Stack:**
-- React Native 0.73
-- Expo 50
-- React Navigation 6
-- Expo Camera
-- Expo Notifications
-- AsyncStorage
-
-**Status:** ✅ Structure complete and ready for screen implementation. Can be built and deployed.
-
----
-
-### ✅ Documentation
-
-**Complete Documentation Delivered:**
-
-1. **README.md** - Main project documentation with:
-   - Feature overview
-   - Architecture diagram
-   - Installation instructions
-   - Setup guides for all components
-   - API overview
-   - Deployment instructions
-   - Testing guidelines
-
-2. **DOCUMENTATION.md** - Comprehensive technical documentation with:
-   - System architecture details
-   - Backend API documentation
-   - Web frontend documentation
-   - Mobile app documentation
-   - Database schema
-   - Authentication & security
-   - Complete deployment guide
-   - API reference with examples
-   - Testing strategy
-   - Maintenance & operations guide
-
-3. **mobile/README.md** - Mobile app specific documentation
-
-**Status:** ✅ Complete and comprehensive
+- Real Paystack/Flutterwave payment gateway integration (currently a wallet
+  simulation, clearly marked as such in the code)
+- Admin dashboard / content moderation
+- Technician portfolio photo and certification upload + verification workflow
+- Push notifications (Firebase), SMS, email delivery
+- Multi-language support (English, Yoruba, Igbo, Hausa)
+- Web and mobile test coverage beyond the current smoke tests
 
 ---
 
 ## Project Statistics
 
-### Backend
-- **Files Created:** 80+
-- **Lines of Code:** ~8,000+
-- **Entities:** 15+ database entities
-- **API Endpoints:** 30+ RESTful endpoints
-- **Repositories:** 15+ JPA repositories
-- **Services:** 10+ service classes
-- **Controllers:** 8+ REST controllers
-
-### Web Frontend
-- **Files Created:** 30+
-- **Lines of Code:** ~3,000+
-- **Pages:** 7 complete pages
-- **Components:** 20+ reusable components
-- **API Integration:** Complete with JWT authentication
-
-### Mobile App
-- **Files Created:** 15+
-- **Lines of Code:** ~1,000+
-- **Screens:** Structure for 10+ screens
-- **Navigation:** Complete navigation system
-- **Platform Support:** iOS and Android
-
----
-
-## Key Features Implemented
-
-### Authentication & Security
-- ✅ JWT token-based authentication
-- ✅ BCrypt password hashing
-- ✅ Role-based access control (USER, TECHNICIAN, ADMIN)
-- ✅ Secure API endpoints
-- ✅ CORS configuration
-
-### User Features
-- ✅ User registration and login
-- ✅ Profile management
-- ✅ Technician search with filters
-- ✅ Technician profile viewing
-- ✅ Booking creation
-- ✅ Booking history
-- ✅ Dashboard with statistics
-
-### Technician Features
-- ✅ Technician registration
-- ✅ Profile management
-- ✅ Service offerings management
-- ✅ Availability scheduling
-- ✅ Portfolio management
-- ✅ Certification uploads
-- ✅ Job request management
-- ✅ Dashboard with earnings and analytics
-
-### Platform Features
-- ✅ Service categories
-- ✅ Rating and review system (entities)
-- ✅ Messaging system (entities)
-- ✅ Notification system (entities)
-- ✅ Payment system (entities)
-- ✅ Booking workflow
-- ✅ Location-based search
-
----
-
-## Technology Highlights
-
-### Modern Stack
-- **Backend:** Latest Spring Boot 3.1.5 with Java 17
-- **Frontend:** Cutting-edge React 19 with Tailwind CSS 4
-- **Mobile:** React Native 0.73 with Expo 50
-- **Database:** MySQL 8.0+ with JPA/Hibernate
-- **Security:** Industry-standard JWT authentication
-
-### Best Practices
-- Clean architecture with separation of concerns
-- RESTful API design
-- DTO pattern for data transfer
-- Repository pattern for data access
-- Service layer for business logic
-- Component-based UI architecture
-- Context API for state management
-- Responsive mobile-first design
-
----
-
-## Deployment Readiness
+These are actual counts as of this writing, not estimates.
 
 ### Backend
-- ✅ Compiles successfully
-- ✅ Can be packaged as JAR
-- ✅ Production configuration ready
-- ✅ Systemd service configuration provided
-- ✅ Database migration scripts ready
+- **Java files:** 80 (~3,550 lines)
+- **Controllers:** 9 &middot; **Services:** 9 &middot; **Repositories:** 14
+- **Entities:** 18 &middot; **DTOs:** 20
+- **Tests:** 3 test classes, 8 test methods
 
-### Web Frontend
-- ✅ Builds successfully
-- ✅ Production bundle optimized
-- ✅ Nginx configuration provided
-- ✅ SSL/HTTPS ready
+### Web
+- **Source files:** 16 (~1,550 lines)
+- **Pages:** 10 (Home, Login, Register, Search, TechnicianProfile, Dashboard,
+  UserDashboard, TechnicianDashboard, Conversation, NotFound)
 
-### Mobile Apps
-- ✅ Expo configuration complete
-- ✅ Can be built with EAS
-- ✅ App Store submission ready
-- ✅ Google Play submission ready
-
----
-
-## What's Next (Future Enhancements)
-
-### Phase 2 - Real-time Features
-- WebSocket integration for live notifications
-- Real-time chat messaging
-- Live booking status updates
-- Push notifications implementation
-
-### Phase 3 - Payment Integration
-- Paystack payment gateway
-- Flutterwave payment gateway
-- Transaction management
-- Wallet system
-
-### Phase 4 - Advanced Features
-- Admin dashboard
-- Advanced analytics
-- SMS notifications
-- Multi-language support (English, Yoruba, Igbo, Hausa)
-- AI-powered recommendations
-- Map integration with directions
-
-### Phase 5 - Mobile Screens
-- Complete all mobile screen implementations
-- Camera functionality for portfolio uploads
-- Push notification handlers
-- Offline mode with data sync
+### Mobile
+- **Source files:** 11 (~2,950 lines)
+- **Screens:** 8 &middot; **Tests:** 2 test suites, 7 test methods
 
 ---
 
@@ -273,106 +114,71 @@
 ```
 TechieFinder/
 ├── backend/                    # Spring Boot backend
-│   ├── src/main/java/         # Java source code
-│   ├── src/main/resources/    # Configuration files
-│   └── pom.xml                # Maven dependencies
-├── frontend/                   # Web frontend (managed separately)
-│   └── techiefinder-web/      # React web app
-├── mobile/                     # React Native mobile apps
-│   ├── src/                   # Mobile app source
-│   └── app.json               # Expo configuration
-├── README.md                   # Main documentation
-├── DOCUMENTATION.md            # Technical documentation
-└── PROJECT_SUMMARY.md          # This file
+│   ├── src/main/java/          # controller, service, repository, model, dto, security, exception
+│   ├── src/test/java/          # JUnit + MockMvc tests
+│   └── Dockerfile
+├── web/                         # React 19 + Vite + Tailwind web app
+│   ├── src/
+│   └── Dockerfile / nginx.conf
+├── mobile/                      # React Native (Expo) mobile app
+│   └── src/
+├── .github/workflows/ci.yml
+├── docker-compose.yml
+├── .env.example
+├── README.md
+├── DOCUMENTATION.md
+└── PROJECT_SUMMARY.md           # This file
 ```
+
+Note: there is no `frontend/techiefinder-web/` directory — an earlier version
+of this document (and the main README) referenced that path for the web app.
+It never existed in this repository; the real web app lives at `web/`.
 
 ---
 
-## Quick Start Guide
+## Quick Start
 
-### 1. Clone Repository
 ```bash
 git clone https://github.com/AlphaSoftJB/TechieFinder.git
 cd TechieFinder
+
+# Backend (dev profile uses in-memory H2, no setup needed)
+cd backend && mvn spring-boot:run
+
+# Web (separate terminal)
+cd web && npm install && npm run dev
+
+# Mobile (separate terminal)
+cd mobile && npm install && npm start
 ```
 
-### 2. Setup Database
-```sql
-CREATE DATABASE techiefinder;
-```
-
-### 3. Run Backend
-```bash
-cd backend
-mvn spring-boot:run
-```
-
-### 4. Run Web Frontend
-```bash
-cd frontend/techiefinder-web/client
-npm install
-npm run dev
-```
-
-### 5. Run Mobile App
-```bash
-cd mobile
-npm install
-npm start
-```
+Or `docker compose up --build` after copying `.env.example` to `.env` — see
+the main [README.md](README.md) for details.
 
 ---
 
 ## Testing
 
-### Backend Tests
 ```bash
-cd backend
-mvn test
+cd backend && mvn test   # 8 tests
+cd mobile && npm test    # 7 tests
+cd web && npm run build  # type-checks + builds
 ```
-
-### Frontend Tests
-```bash
-cd frontend/techiefinder-web/client
-npm test
-```
-
----
-
-## GitHub Repository
-
-**URL:** https://github.com/AlphaSoftJB/TechieFinder
-
-**Branches:**
-- `master` - Main production branch
-
-**Latest Commit:** Complete TechieFinder platform implementation
-
----
-
-## Support & Documentation
-
-- **Main README:** [README.md](README.md)
-- **Technical Docs:** [DOCUMENTATION.md](DOCUMENTATION.md)
-- **Mobile Docs:** [mobile/README.md](mobile/README.md)
-- **GitHub Issues:** https://github.com/AlphaSoftJB/TechieFinder/issues
 
 ---
 
 ## License
 
-Copyright © 2024 TechieFinder. All rights reserved.
+Copyright © 2026 TechieFinder. All rights reserved.
 
 ---
 
 ## Conclusion
 
-The TechieFinder platform is a comprehensive, production-ready solution with a solid foundation for connecting users with technicians in Nigeria. The backend API is fully functional, the web frontend is complete and deployed, and the mobile app structure is ready for implementation. All code is well-documented, follows best practices, and is ready for deployment.
-
-**Status:** ✅ **PRODUCTION READY**
-
-The platform can be deployed immediately and is ready to serve users. Future enhancements can be added incrementally without disrupting the core functionality.
-
----
+The backend, web app, and mobile app all run and interoperate against real
+data, covering the platform's core value: finding a technician, booking them,
+paying, rating, and messaging. The remaining gaps — a real payment gateway,
+an admin dashboard, and push/SMS/email delivery — are scoped and listed above,
+not hidden behind a blanket "production ready" claim.
 
 **Developed with ❤️ for Nigeria**
