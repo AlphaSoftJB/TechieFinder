@@ -8,6 +8,8 @@ public class RatingDto {
     private Long bookingId;
     private Long userId;
     private Long technicianId;
+    private String customerName;
+    private String technicianName;
     private Integer rating;
     private String review;
     private Integer professionalismRating;

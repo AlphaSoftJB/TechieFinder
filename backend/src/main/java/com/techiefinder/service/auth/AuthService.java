@@ -36,6 +36,14 @@ public class AuthService {
             throw new IllegalStateException("Email already exists");
         }
 
+        // ADMIN accounts are never created through public self-registration --
+        // otherwise anyone could POST {"role":"ADMIN", ...} and grant themselves
+        // full admin access. Admins are seeded (DataInitializer) or created by
+        // an existing admin; this endpoint only accepts USER or TECHNICIAN.
+        if (request.getRole() == User.UserRole.ADMIN) {
+            throw new SecurityException("Cannot self-register as an administrator account");
+        }
+
         User user = User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))

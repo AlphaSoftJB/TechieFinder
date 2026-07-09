@@ -5,6 +5,10 @@ import com.techiefinder.model.user.User;
 import com.techiefinder.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -24,6 +28,25 @@ public class UserService {
         return mapToDto(user);
     }
 
+    public List<UserDto> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public UserDto setActive(Long id, boolean active) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        if (user.getRole() == User.UserRole.ADMIN) {
+            throw new SecurityException("Admin accounts cannot be suspended");
+        }
+        user.setActive(active);
+        user = userRepository.save(user);
+        return mapToDto(user);
+    }
+
     private UserDto mapToDto(User user) {
         UserDto dto = new UserDto();
         dto.setId(user.getId());
@@ -35,6 +58,8 @@ public class UserService {
         dto.setEmailVerified(user.getEmailVerified());
         dto.setPhoneVerified(user.getPhoneVerified());
         dto.setProfileImageUrl(user.getProfileImageUrl());
+        dto.setActive(user.getActive());
+        dto.setCreatedAt(user.getCreatedAt());
         return dto;
     }
 }

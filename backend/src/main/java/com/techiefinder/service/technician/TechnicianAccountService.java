@@ -80,6 +80,22 @@ public class TechnicianAccountService {
                 .collect(Collectors.toList());
     }
 
+    public List<TechnicianDto> getAllTechnicians() {
+        return technicianRepository.findAll()
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public TechnicianDto updateVerificationStatus(Long id, Technician.VerificationStatus status) {
+        Technician technician = technicianRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Technician not found"));
+        technician.setVerificationStatus(status);
+        technician = technicianRepository.save(technician);
+        return mapToDto(technician);
+    }
+
     public List<TechnicianDto> searchAvailableTechnicians(String categorySlug) {
         List<Technician> technicians = StringUtils.hasText(categorySlug)
                 ? technicianRepository.findAvailableByCategorySlug(categorySlug)

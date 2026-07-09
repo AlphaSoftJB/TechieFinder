@@ -81,6 +81,22 @@ public class RatingService {
                 .collect(Collectors.toList());
     }
 
+    public List<RatingDto> getAllRatings() {
+        return ratingRepository.findAll()
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteRating(Long id) {
+        Rating rating = ratingRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Rating not found"));
+        Technician technician = rating.getTechnician();
+        ratingRepository.delete(rating);
+        recalculateTechnicianRating(technician);
+    }
+
     private void recalculateTechnicianRating(Technician technician) {
         Double average = ratingRepository.getAverageRatingForTechnician(technician.getId());
         long totalRatings = ratingRepository.findByTechnicianId(technician.getId()).size();
@@ -98,6 +114,8 @@ public class RatingService {
         dto.setBookingId(rating.getBooking().getId());
         dto.setUserId(rating.getUser().getId());
         dto.setTechnicianId(rating.getTechnician().getId());
+        dto.setCustomerName(rating.getUser().getFirstName() + " " + rating.getUser().getLastName());
+        dto.setTechnicianName(rating.getTechnician().getUser().getFirstName() + " " + rating.getTechnician().getUser().getLastName());
         dto.setRating(rating.getRating());
         dto.setReview(rating.getReview());
         dto.setProfessionalismRating(rating.getProfessionalismRating());

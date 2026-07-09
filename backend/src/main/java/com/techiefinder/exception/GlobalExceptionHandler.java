@@ -3,6 +3,7 @@ package com.techiefinder.exception;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AccountStatusException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -59,6 +60,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleBadCredentials(org.springframework.security.authentication.BadCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new ApiError(HttpStatus.UNAUTHORIZED.value(), "Invalid email or password"));
+    }
+
+    @ExceptionHandler(AccountStatusException.class)
+    public ResponseEntity<ApiError> handleAccountStatus(AccountStatusException ex) {
+        // Thrown by Spring Security's pre-authentication checks when a suspended
+        // (CustomUserDetails.active == false) account attempts to log in.
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new ApiError(HttpStatus.UNAUTHORIZED.value(), "This account has been suspended"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -21,7 +21,7 @@ them → book → confirm → pay → complete → rate → message → notifica
 
 **Not yet implemented** (see [Roadmap](#roadmap)): real Paystack/Flutterwave gateway calls
 (payments currently settle against a simulated wallet — see
-`backend/.../service/payment/PaymentService.java`), an admin dashboard, push/SMS/email
+`backend/.../service/payment/PaymentService.java`), push/SMS/email
 delivery, technician portfolio/certification upload, and multi-language support.
 
 ---
@@ -43,8 +43,20 @@ delivery, technician portfolio/certification upload, and multi-language support.
 - **Service Area**: Set your location and service radius so nearby customers can find you
 - **Availability**: `available`/`acceptingJobs` flags control whether you show up in search
 
+### For Admins
+- **Dashboard**: Platform-wide stats (users, technicians, bookings, revenue, ratings)
+- **User Management**: Suspend/reactivate any non-admin account
+- **Technician Verification**: Approve, reject, or suspend a technician's verification status
+- **Booking Oversight**: View every booking on the platform
+- **Content Moderation**: View and remove reviews
+
+A default admin account is seeded on first startup (`admin@techiefinder.com` /
+`ChangeMe123!` in dev — override via `ADMIN_EMAIL`/`ADMIN_PASSWORD`). Accounts
+can never self-register with the `ADMIN` role; admins are seeded or created by
+an existing admin only.
+
 ### Planned (not yet built)
-- Admin dashboard / content moderation
+- Content moderation beyond review removal (flagging, reports)
 - Technician portfolio photos and certification upload + verification workflow
 - Push notifications (Firebase), SMS, and email delivery
 - Real payment gateway integration (Paystack/Flutterwave)
@@ -404,12 +416,13 @@ For technical support or questions:
   error handling
 - Web app: full golden-path UI against the real backend
 - Mobile app: full golden-path UI against the real backend
+- Admin dashboard: stats, user suspension, technician verification, booking
+  oversight, review moderation (backend + web UI)
 - Tests: backend (JUnit/MockMvc), mobile (Jest/RNTL)
 - DevOps: Dockerfiles, docker-compose, CI (backend/mobile/web)
 
 ### Next
 - Real Paystack/Flutterwave gateway integration (currently a wallet simulation)
-- Admin dashboard and content moderation
 - Technician portfolio photos and certification upload/verification
 - Push notifications (Firebase), SMS, email delivery
 - Web/mobile unit and component test coverage beyond the current smoke tests

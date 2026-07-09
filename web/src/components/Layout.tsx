@@ -28,7 +28,7 @@ export default function Layout() {
             {isAuthenticated ? (
               <>
                 <Link to="/dashboard" className="hover:text-emerald-700">
-                  Dashboard
+                  {user?.role === 'ADMIN' ? 'Admin' : 'Dashboard'}
                 </Link>
                 <span className="text-neutral-400">|</span>
                 <span className="text-neutral-500">Hi, {user?.firstName}</span>

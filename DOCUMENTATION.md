@@ -382,6 +382,31 @@ GET   /api/notifications/my/unread-count
 PATCH /api/notifications/{id}/read
 ```
 
+### Admin (auth: ADMIN)
+```
+GET    /api/admin/stats
+→ { totalUsers, totalCustomers, totalTechnicians, pendingTechnicianVerifications,
+    totalBookings, pendingBookings, completedBookings, cancelledBookings,
+    totalRevenue, totalRatings, averageRating }
+
+GET    /api/admin/users                         → [UserDto]
+PATCH  /api/admin/users/{id}/status
+{ "active": false }   # suspends/reactivates a non-admin account
+
+GET    /api/admin/technicians                   → [TechnicianDto]
+PATCH  /api/admin/technicians/{id}/verification
+{ "status": "PENDING" | "VERIFIED" | "REJECTED" | "SUSPENDED" }
+
+GET    /api/admin/bookings                      → [BookingDto]
+GET    /api/admin/ratings                       → [RatingDto]
+DELETE /api/admin/ratings/{id}                   # removes a review, recalculates the technician's rating
+```
+A default admin (`admin@techiefinder.com` / `ChangeMe123!` in dev, override
+via `ADMIN_EMAIL`/`ADMIN_PASSWORD`) is seeded on first startup by
+`DataInitializer`. `POST /api/auth/register` rejects `"role": "ADMIN"` with a
+403 — admin accounts can only be seeded or created by an existing admin.
+A suspended account (`active: false`) is rejected at login with a 401.
+
 ### Error Responses
 All errors return a consistent shape via `GlobalExceptionHandler`:
 ```json
@@ -398,10 +423,16 @@ leaked to clients).
 ## Testing Strategy
 
 ### Backend
-`mvn test` runs 3 classes / 8 tests:
+`mvn test` runs 4 classes / 17 tests:
 - `TechieFinderApplicationTests` — Spring context loads
 - `AuthControllerTest` (MockMvc) — register success/validation/duplicate-email,
-  wrong-password login, unauthenticated access to a protected endpoint
+  wrong-password login, unauthenticated access to a protected endpoint, guest
+  read access to technician browsing endpoints
+- `AdminControllerTest` (MockMvc) — default admin seeding/login, ADMIN
+  self-registration is rejected, non-admins are rejected from `/api/admin/**`,
+  stats/users/technicians/bookings/ratings listing, suspend/reactivate a user
+  (and that a suspended user's login is rejected), admins can't suspend other
+  admins, technician verification status updates
 - `BookingFlowIntegrationTest` (MockMvc, full context) — the entire booking
   lifecycle from the API Reference section above, plus negative cases
   (wrong-role status update, double-pay, double-rate)
@@ -427,9 +458,9 @@ backend.
 - **Payments** settle against a simulated wallet, not Paystack/Flutterwave —
   `PaymentService`'s docstring flags exactly where to swap in a real gateway
   call once API keys are available
-- **No admin dashboard** — `ADMIN` role exists in the data model and security
-  config but has no dedicated UI or endpoints beyond what `USER`/`TECHNICIAN`
-  already expose
+- **Admin dashboard moderation is basic** — reviews can only be removed
+  outright (no flagging/reporting workflow), and there's no audit log of
+  admin actions (suspensions, verification changes, deletions)
 - **No push/SMS/email delivery** — notifications are in-app (DB-backed) only;
   the `sentViaPush`/`sentViaEmail`/`sentViaSms` fields on `Notification` exist
   but nothing sets them to `true` via an actual delivery channel

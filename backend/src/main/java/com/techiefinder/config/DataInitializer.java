@@ -1,9 +1,14 @@
 package com.techiefinder.config;
 
 import com.techiefinder.model.technician.ServiceCategory;
+import com.techiefinder.model.user.User;
+import com.techiefinder.model.user.UserProfile;
 import com.techiefinder.repository.technician.ServiceCategoryRepository;
+import com.techiefinder.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -15,8 +20,22 @@ public class DataInitializer implements CommandLineRunner {
     @Autowired
     private ServiceCategoryRepository serviceCategoryRepository;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @Value("${admin.default.email}")
+    private String defaultAdminEmail;
+
+    @Value("${admin.default.password}")
+    private String defaultAdminPassword;
+
     @Override
     public void run(String... args) throws Exception {
+        seedDefaultAdmin();
+
         if (serviceCategoryRepository.count() == 0) {
             List<ServiceCategory> categories = Arrays.asList(
                     ServiceCategory.builder()
@@ -84,5 +103,41 @@ public class DataInitializer implements CommandLineRunner {
             serviceCategoryRepository.saveAll(categories);
             System.out.println("Service categories initialized successfully!");
         }
+    }
+
+    /**
+     * Seeds exactly one ADMIN account so there's a way into the admin dashboard
+     * on a fresh install -- ADMIN accounts can't be created through public
+     * registration (see AuthService.register). Change these credentials via
+     * ADMIN_EMAIL/ADMIN_PASSWORD before any real deployment; the defaults are
+     * dev-only.
+     */
+    private void seedDefaultAdmin() {
+        if (userRepository.existsByEmail(defaultAdminEmail)) {
+            return;
+        }
+
+        User admin = User.builder()
+                .email(defaultAdminEmail)
+                .password(passwordEncoder.encode(defaultAdminPassword))
+                .firstName("Platform")
+                .lastName("Admin")
+                .role(User.UserRole.ADMIN)
+                .emailVerified(true)
+                .phoneVerified(false)
+                .build();
+        admin = userRepository.save(admin);
+
+        UserProfile profile = UserProfile.builder()
+                .user(admin)
+                .preferredLanguage("en")
+                .notificationsEnabled(true)
+                .smsNotificationsEnabled(true)
+                .emailNotificationsEnabled(true)
+                .build();
+        admin.setProfile(profile);
+        userRepository.save(admin);
+
+        System.out.println("Seeded default admin account: " + defaultAdminEmail);
     }
 }

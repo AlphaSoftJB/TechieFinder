@@ -2,6 +2,8 @@ package com.techiefinder.dto.user;
 
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Data
 public class UserDto {
     private Long id;
@@ -13,4 +15,6 @@ public class UserDto {
     private Boolean emailVerified;
     private Boolean phoneVerified;
     private String profileImageUrl;
+    private Boolean active;
+    private LocalDateTime createdAt;
 }

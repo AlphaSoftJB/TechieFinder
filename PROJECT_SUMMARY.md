@@ -80,7 +80,6 @@ described below.
 
 - Real Paystack/Flutterwave payment gateway integration (currently a wallet
   simulation, clearly marked as such in the code)
-- Admin dashboard / content moderation
 - Technician portfolio photo and certification upload + verification workflow
 - Push notifications (Firebase), SMS, email delivery
 - Multi-language support (English, Yoruba, Igbo, Hausa)
@@ -93,15 +92,15 @@ described below.
 These are actual counts as of this writing, not estimates.
 
 ### Backend
-- **Java files:** 80 (~3,550 lines)
-- **Controllers:** 9 &middot; **Services:** 9 &middot; **Repositories:** 14
-- **Entities:** 18 &middot; **DTOs:** 20
-- **Tests:** 3 test classes, 8 test methods
+- **Java files:** 85 (~3,900 lines)
+- **Controllers:** 10 &middot; **Services:** 10 &middot; **Repositories:** 14
+- **Entities:** 18 &middot; **DTOs:** 23
+- **Tests:** 4 test classes, 17 test methods
 
 ### Web
-- **Source files:** 16 (~1,550 lines)
-- **Pages:** 10 (Home, Login, Register, Search, TechnicianProfile, Dashboard,
-  UserDashboard, TechnicianDashboard, Conversation, NotFound)
+- **Source files:** 17 (~1,860 lines)
+- **Pages:** 11 (Home, Login, Register, Search, TechnicianProfile, Dashboard,
+  UserDashboard, TechnicianDashboard, AdminDashboard, Conversation, NotFound)
 
 ### Mobile
 - **Source files:** 11 (~2,950 lines)
@@ -160,7 +159,7 @@ the main [README.md](README.md) for details.
 ## Testing
 
 ```bash
-cd backend && mvn test   # 8 tests
+cd backend && mvn test   # 17 tests
 cd mobile && npm test    # 7 tests
 cd web && npm run build  # type-checks + builds
 ```
@@ -177,8 +176,8 @@ Copyright © 2026 TechieFinder. All rights reserved.
 
 The backend, web app, and mobile app all run and interoperate against real
 data, covering the platform's core value: finding a technician, booking them,
-paying, rating, and messaging. The remaining gaps — a real payment gateway,
-an admin dashboard, and push/SMS/email delivery — are scoped and listed above,
-not hidden behind a blanket "production ready" claim.
+paying, rating, and messaging, plus an admin dashboard for platform oversight.
+The remaining gaps — a real payment gateway and push/SMS/email delivery — are
+scoped and listed above, not hidden behind a blanket "production ready" claim.
 
 **Developed with ❤️ for Nigeria**

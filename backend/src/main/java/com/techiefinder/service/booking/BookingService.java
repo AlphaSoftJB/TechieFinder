@@ -106,6 +106,13 @@ public class BookingService {
                 .collect(Collectors.toList());
     }
 
+    public List<BookingDto> getAllBookings() {
+        return bookingRepository.findAll()
+                .stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public BookingDto updateStatus(Long bookingId, Long actingUserId, BookingStatusUpdateRequest request) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -179,6 +186,8 @@ public class BookingService {
         dto.setBookingNumber(booking.getBookingNumber());
         dto.setUserId(booking.getUser().getId());
         dto.setTechnicianId(booking.getTechnician().getId());
+        dto.setCustomerName(booking.getUser().getFirstName() + " " + booking.getUser().getLastName());
+        dto.setTechnicianName(booking.getTechnician().getUser().getFirstName() + " " + booking.getTechnician().getUser().getLastName());
         dto.setStatus(booking.getStatus().name());
         dto.setScheduledDateTime(booking.getScheduledDateTime());
         dto.setServiceDescription(booking.getServiceDescription());

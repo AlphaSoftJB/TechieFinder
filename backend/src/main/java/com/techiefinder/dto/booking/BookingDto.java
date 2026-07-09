@@ -11,6 +11,8 @@ public class BookingDto {
     private String bookingNumber;
     private Long userId;
     private Long technicianId;
+    private String customerName;
+    private String technicianName;
     private String status;
     private LocalDateTime scheduledDateTime;
     private String serviceDescription;
