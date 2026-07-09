@@ -106,7 +106,7 @@ export default function RegisterScreen({ navigation }: any) {
     } catch (error: any) {
       Alert.alert(
         'Registration Failed',
-        error.response?.data?.message || 'Unable to create account. Please try again.',
+        error.message || 'Unable to create account. Please try again.',
         [{ text: 'OK' }]
       );
     } finally {

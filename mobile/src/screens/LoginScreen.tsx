@@ -61,7 +61,7 @@ export default function LoginScreen({ navigation }: any) {
     } catch (error: any) {
       Alert.alert(
         'Login Failed',
-        error.response?.data?.message || 'Invalid email or password. Please try again.',
+        error.message || 'Invalid email or password. Please try again.',
         [{ text: 'OK' }]
       );
     } finally {

@@ -13,33 +13,41 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../services/api';
 
-const SERVICE_CATEGORIES = [
-  { id: 1, name: 'Plumbing', icon: 'water', color: '#3B82F6' },
-  { id: 2, name: 'Electrical', icon: 'flash', color: '#F59E0B' },
-  { id: 3, name: 'Carpentry', icon: 'hammer', color: '#8B5CF6' },
-  { id: 4, name: 'Mechanic', icon: 'car', color: '#EF4444' },
-  { id: 5, name: 'Painting', icon: 'color-palette', color: '#10B981' },
-  { id: 6, name: 'Cleaning', icon: 'sparkles', color: '#06B6D4' },
-  { id: 7, name: 'AC Repair', icon: 'snow', color: '#6366F1' },
-  { id: 8, name: 'Welding', icon: 'flame', color: '#F97316' },
-];
+const CATEGORY_ICONS: Record<string, { icon: string; color: string }> = {
+  plumbing: { icon: 'water', color: '#3B82F6' },
+  electrical: { icon: 'flash', color: '#F59E0B' },
+  carpentry: { icon: 'hammer', color: '#8B5CF6' },
+  'auto-mechanic': { icon: 'car', color: '#EF4444' },
+  hvac: { icon: 'snow', color: '#6366F1' },
+  painting: { icon: 'color-palette', color: '#10B981' },
+  welding: { icon: 'flame', color: '#F97316' },
+  cleaning: { icon: 'sparkles', color: '#06B6D4' },
+  'appliance-repair': { icon: 'build', color: '#0EA5E9' },
+  'generator-repair': { icon: 'battery-charging', color: '#DC2626' },
+};
+const DEFAULT_CATEGORY_STYLE = { icon: 'construct', color: '#1B8B4D' };
 
 export default function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
+  const [categories, setCategories] = useState<any[]>([]);
   const [featuredTechnicians, setFeaturedTechnicians] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
-    loadFeaturedTechnicians();
+    loadHome();
   }, []);
 
-  const loadFeaturedTechnicians = async () => {
+  const loadHome = async () => {
     try {
-      const response = await api.get('/technicians/available?limit=5');
-      setFeaturedTechnicians(response.data.slice(0, 5));
+      const [categoriesResponse, techniciansResponse] = await Promise.all([
+        api.get('/public/categories'),
+        api.get('/technicians/available'),
+      ]);
+      setCategories(categoriesResponse.data);
+      setFeaturedTechnicians(techniciansResponse.data.slice(0, 5));
     } catch (error) {
-      console.error('Error loading featured technicians:', error);
+      console.error('Error loading home screen data:', error);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -48,11 +56,11 @@ export default function HomeScreen({ navigation }: any) {
 
   const onRefresh = () => {
     setRefreshing(true);
-    loadFeaturedTechnicians();
+    loadHome();
   };
 
   const handleCategoryPress = (category: any) => {
-    navigation.navigate('Search', { category: category.name });
+    navigation.navigate('Search', { categorySlug: category.slug, categoryName: category.name });
   };
 
   const handleTechnicianPress = (technician: any) => {
@@ -99,18 +107,21 @@ export default function HomeScreen({ navigation }: any) {
         </View>
 
         <View style={styles.categoriesGrid}>
-          {SERVICE_CATEGORIES.map((category) => (
-            <TouchableOpacity
-              key={category.id}
-              style={styles.categoryCard}
-              onPress={() => handleCategoryPress(category)}
-            >
-              <View style={[styles.categoryIcon, { backgroundColor: category.color + '20' }]}>
-                <Ionicons name={category.icon as any} size={28} color={category.color} />
-              </View>
-              <Text style={styles.categoryName}>{category.name}</Text>
-            </TouchableOpacity>
-          ))}
+          {categories.map((category) => {
+            const style = CATEGORY_ICONS[category.slug] || DEFAULT_CATEGORY_STYLE;
+            return (
+              <TouchableOpacity
+                key={category.id}
+                style={styles.categoryCard}
+                onPress={() => handleCategoryPress(category)}
+              >
+                <View style={[styles.categoryIcon, { backgroundColor: style.color + '20' }]}>
+                  <Ionicons name={style.icon as any} size={28} color={style.color} />
+                </View>
+                <Text style={styles.categoryName}>{category.name}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
@@ -151,10 +162,10 @@ export default function HomeScreen({ navigation }: any) {
                   </Text>
                   <View style={styles.ratingContainer}>
                     <Ionicons name="star" size={14} color="#F59E0B" />
-                    <Text style={styles.rating}>{technician.averageRating?.toFixed(1) || '5.0'}</Text>
+                    <Text style={styles.rating}>{Number(technician.rating || 0).toFixed(1)}</Text>
                     <Text style={styles.ratingCount}>({technician.totalRatings || 0})</Text>
                   </View>
-                  {technician.isVerified && (
+                  {technician.verified && (
                     <View style={styles.verifiedBadge}>
                       <Ionicons name="checkmark-circle" size={14} color="#1B8B4D" />
                       <Text style={styles.verifiedText}>Verified</Text>

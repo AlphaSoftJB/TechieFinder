@@ -17,7 +17,8 @@
       "bundleIdentifier": "com.techiefinder.app",
       "infoPlist": {
         "NSCameraUsageDescription": "TechieFinder needs access to your camera to upload portfolio photos.",
-        "NSPhotoLibraryUsageDescription": "TechieFinder needs access to your photos to upload portfolio images."
+        "NSPhotoLibraryUsageDescription": "TechieFinder needs access to your photos to upload portfolio images.",
+        "NSLocationWhenInUseUsageDescription": "TechieFinder needs your location to find technicians near you and to let technicians set their service area."
       }
     },
     "android": {
@@ -29,11 +30,21 @@
       "permissions": [
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
+        "WRITE_EXTERNAL_STORAGE",
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
       ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "TechieFinder needs your location to find technicians near you and to let technicians set their service area."
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     },

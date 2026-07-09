@@ -12,6 +12,7 @@ import SearchScreen from '../screens/SearchScreen';
 import TechnicianProfileScreen from '../screens/TechnicianProfileScreen';
 import UserDashboardScreen from '../screens/UserDashboardScreen';
 import TechnicianDashboardScreen from '../screens/TechnicianDashboardScreen';
+import ChatScreen from '../screens/ChatScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -78,11 +79,13 @@ export default function RootNavigator() {
         <>
           <Stack.Screen name="MainTabs" component={TechnicianTabs} />
           <Stack.Screen name="TechnicianProfile" component={TechnicianProfileScreen} />
+          <Stack.Screen name="Chat" component={ChatScreen} />
         </>
       ) : (
         <>
           <Stack.Screen name="MainTabs" component={UserTabs} />
           <Stack.Screen name="TechnicianProfile" component={TechnicianProfileScreen} />
+          <Stack.Screen name="Chat" component={ChatScreen} />
         </>
       )}
     </Stack.Navigator>
