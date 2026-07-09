@@ -8,6 +8,10 @@ mobile/.expo/
 mobile/dist/
 mobile/web-build/
 
+# Web (Vite)
+web/node_modules/
+web/dist/
+
 # Environment secrets
 .env
 

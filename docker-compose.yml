@@ -28,8 +28,18 @@ services:
       DATABASE_USERNAME: root
       DATABASE_PASSWORD: ${DATABASE_PASSWORD:-password}
       JWT_SECRET: ${JWT_SECRET:-TechieFinderDevOnlySecretKeyForJWTHS512SigningRequiresAtLeast64ByteLongKey}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
     ports:
       - "8080:8080"
+
+  web:
+    build:
+      context: ./web
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
 
 volumes:
   mysql_data:

@@ -1,5 +1,6 @@
 package com.techiefinder.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -31,6 +32,15 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiError> handleConflict(IllegalStateException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ApiError(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        // Covers races that get past an application-level existence check (e.g. two
+        // near-simultaneous requests both passing a findBy...().isPresent() check before
+        // either commits) and hit a unique constraint at the database level instead.
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError(HttpStatus.CONFLICT.value(), "This record already exists or conflicts with existing data"));
     }
 
     @ExceptionHandler(SecurityException.class)

@@ -47,8 +47,17 @@ export default function TechnicianDashboardScreen() {
       return response.data;
     } catch (error: any) {
       if (error.response?.status === 404 && user) {
-        const created = await api.post(`/technicians/create/${user.id}`);
-        return created.data;
+        try {
+          const created = await api.post(`/technicians/create/${user.id}`);
+          return created.data;
+        } catch (createError: any) {
+          // Another in-flight request may have already created it a moment ago.
+          if (createError.response?.status === 409) {
+            const response = await api.get('/technicians/me');
+            return response.data;
+          }
+          throw createError;
+        }
       }
       throw error;
     }
