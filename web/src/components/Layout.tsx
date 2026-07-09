@@ -1,9 +1,12 @@
 import { Link, Outlet, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { SUPPORTED_LANGUAGES } from '../i18n';
 
 export default function Layout() {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
 
   const handleLogout = () => {
     logout();
@@ -23,35 +26,50 @@ export default function Layout() {
 
           <nav className="flex items-center gap-6 text-sm font-medium text-neutral-600">
             <Link to="/search" className="hover:text-emerald-700">
-              Find a Technician
+              {t('nav.findTechnician')}
             </Link>
             {isAuthenticated ? (
               <>
                 <Link to="/dashboard" className="hover:text-emerald-700">
-                  {user?.role === 'ADMIN' ? 'Admin' : 'Dashboard'}
+                  {user?.role === 'ADMIN' ? t('nav.admin') : t('nav.dashboard')}
                 </Link>
                 <span className="text-neutral-400">|</span>
-                <span className="text-neutral-500">Hi, {user?.firstName}</span>
+                <span className="text-neutral-500">{t('nav.hi', { name: user?.firstName })}</span>
                 <button
                   onClick={handleLogout}
                   className="rounded-md bg-neutral-100 px-3 py-1.5 text-neutral-700 hover:bg-neutral-200"
                 >
-                  Log out
+                  {t('nav.logout')}
                 </button>
               </>
             ) : (
               <>
                 <Link to="/login" className="hover:text-emerald-700">
-                  Log in
+                  {t('nav.login')}
                 </Link>
                 <Link
                   to="/register"
                   className="rounded-md bg-emerald-700 px-4 py-1.5 text-white hover:bg-emerald-800"
                 >
-                  Sign up
+                  {t('nav.signup')}
                 </Link>
               </>
             )}
+            <label className="sr-only" htmlFor="language-select">
+              {t('language.label')}
+            </label>
+            <select
+              id="language-select"
+              value={i18n.resolvedLanguage || 'en'}
+              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-xs text-neutral-600"
+            >
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.label}
+                </option>
+              ))}
+            </select>
           </nav>
         </div>
       </header>
@@ -61,7 +79,7 @@ export default function Layout() {
       </main>
 
       <footer className="border-t border-neutral-200 py-6 text-center text-sm text-neutral-500">
-        TechieFinder &mdash; connecting Nigerians with skilled local technicians.
+        {t('footer.tagline')}
       </footer>
     </div>
   );

@@ -41,4 +41,26 @@ public abstract class BaseEntity {
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    /**
+     * Identity-based equals/hashCode (id only), not Lombok's default field-by-field
+     * @Data behavior -- entities here have bidirectional relations (e.g. User <-> UserProfile),
+     * and a naive field-by-field hashCode/equals recurses through them infinitely
+     * the moment Hibernate needs to put one in a HashSet (a lazy-loaded @OneToMany
+     * collection is backed by one). hashCode is a constant per class, not id-derived,
+     * since id is null before the entity is first persisted but hashCode must stay
+     * stable across an object's lifetime.
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof BaseEntity)) return false;
+        BaseEntity other = (BaseEntity) o;
+        return id != null && id.equals(other.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

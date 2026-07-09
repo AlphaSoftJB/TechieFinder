@@ -1,0 +1,24 @@
+{
+  "login": {
+    "title": "TechieFinder",
+    "subtitle": "Wá àwọn oníṣẹ́-ọwọ́ tó mọṣẹ́ nítòsí rẹ",
+    "emailLabel": "Àdírẹ́sì Ímeèlì",
+    "emailPlaceholder": "Tẹ ímeèlì rẹ",
+    "passwordLabel": "Ọ̀rọ̀ìgbaniwọlé",
+    "passwordPlaceholder": "Tẹ ọ̀rọ̀ìgbaniwọlé rẹ",
+    "forgotPassword": "Ṣé o gbàgbé ọ̀rọ̀ìgbaniwọlé rẹ?",
+    "submit": "Wọlé",
+    "or": "TÀBÍ",
+    "noAccount": "Ò ò ní àkántì? ",
+    "signUp": "Forúkọsílẹ̀",
+    "emailRequired": "Ímeèlì gbọ́dọ̀ wà",
+    "emailInvalid": "Jọ̀wọ́ tẹ ímeèlì tó tọ́",
+    "passwordRequired": "Ọ̀rọ̀ìgbaniwọlé gbọ́dọ̀ wà",
+    "passwordTooShort": "Ọ̀rọ̀ìgbaniwọlé gbọ́dọ̀ ní ó kéré tán lẹ́tà mẹ́fà",
+    "failedTitle": "Wíwọlé Kùnà",
+    "failedDefault": "Ímeèlì tàbí ọ̀rọ̀ìgbaniwọlé kò tọ́. Jọ̀wọ́ tún gbìyànjú."
+  },
+  "language": {
+    "label": "Èdè"
+  }
+}

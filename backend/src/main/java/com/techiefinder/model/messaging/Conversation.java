@@ -13,8 +13,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "conversations")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

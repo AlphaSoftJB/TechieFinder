@@ -6,11 +6,17 @@ import axios from 'axios';
 // - A physical device needs your machine's LAN IP (e.g. http://192.168.1.20:8080/api).
 // Override any of these by setting EXPO_PUBLIC_API_URL before running `expo start`.
 const DEFAULT_API_URL = 'http://localhost:8080/api';
+const apiUrl = process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_URL;
 
 const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_URL,
+  baseURL: apiUrl,
   timeout: 15000,
 });
+
+// Uploaded-file endpoints (portfolio photos, certificates) return paths like
+// "/uploads/portfolio/xyz.jpg" relative to the backend's origin, not "/api" --
+// this strips the "/api" suffix so screens can build a full image URL.
+export const apiOrigin = apiUrl.replace(/\/api\/?$/, '');
 
 let authToken: string | null = null;
 let unauthorizedHandler: (() => void) | null = null;

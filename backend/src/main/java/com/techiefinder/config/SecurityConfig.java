@@ -67,9 +67,13 @@ public class SecurityConfig {
                         .requestMatchers(new AntPathRequestMatcher("/api/auth/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/api/public/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/h2-console/**")).permitAll()
+                        .requestMatchers(new AntPathRequestMatcher("/uploads/**", "GET")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/swagger-ui/**"),
                                 new AntPathRequestMatcher("/v3/api-docs/**")).permitAll()
                         .requestMatchers(new AntPathRequestMatcher("/ws/**")).permitAll()
+                        // Paystack/Flutterwave call these directly (no user session); the
+                        // payload's own gateway signature is what authenticates the request.
+                        .requestMatchers(new AntPathRequestMatcher("/api/payments/webhook/**", "POST")).permitAll()
                         // A technician's own profile/offerings must stay authenticated even though
                         // the general browsing patterns below would otherwise match them too --
                         // Spring Security takes the first matching rule, so these have to come first.

@@ -12,10 +12,13 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import { SUPPORTED_LANGUAGES } from '../i18n';
 
 export default function LoginScreen({ navigation }: any) {
   const { login } = useAuth();
+  const { t, i18n } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -29,19 +32,19 @@ export default function LoginScreen({ navigation }: any) {
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t('login.emailRequired');
       valid = false;
     } else if (!emailRegex.test(email)) {
-      newErrors.email = 'Please enter a valid email';
+      newErrors.email = t('login.emailInvalid');
       valid = false;
     }
 
     // Password validation
     if (!password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t('login.passwordRequired');
       valid = false;
     } else if (password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t('login.passwordTooShort');
       valid = false;
     }
 
@@ -60,8 +63,8 @@ export default function LoginScreen({ navigation }: any) {
       // Navigation is handled automatically by AuthContext
     } catch (error: any) {
       Alert.alert(
-        'Login Failed',
-        error.message || 'Invalid email or password. Please try again.',
+        t('login.failedTitle'),
+        error.message || t('login.failedDefault'),
         [{ text: 'OK' }]
       );
     } finally {
@@ -83,20 +86,35 @@ export default function LoginScreen({ navigation }: any) {
           <View style={styles.logoContainer}>
             <Ionicons name="construct" size={60} color="#1B8B4D" />
           </View>
-          <Text style={styles.title}>TechieFinder</Text>
-          <Text style={styles.subtitle}>Find skilled technicians near you</Text>
+          <Text style={styles.title}>{t('login.title')}</Text>
+          <Text style={styles.subtitle}>{t('login.subtitle')}</Text>
+        </View>
+
+        {/* Language switcher */}
+        <View style={styles.languageRow}>
+          {SUPPORTED_LANGUAGES.map((lang) => (
+            <TouchableOpacity
+              key={lang.code}
+              onPress={() => i18n.changeLanguage(lang.code)}
+              style={[styles.languagePill, i18n.language === lang.code && styles.languagePillActive]}
+            >
+              <Text style={[styles.languagePillText, i18n.language === lang.code && styles.languagePillTextActive]}>
+                {lang.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {/* Login Form */}
         <View style={styles.form}>
           {/* Email Input */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Email Address</Text>
+            <Text style={styles.label}>{t('login.emailLabel')}</Text>
             <View style={[styles.inputWrapper, errors.email ? styles.inputError : null]}>
               <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Enter your email"
+                placeholder={t('login.emailPlaceholder')}
                 value={email}
                 onChangeText={(text) => {
                   setEmail(text);
@@ -113,12 +131,12 @@ export default function LoginScreen({ navigation }: any) {
 
           {/* Password Input */}
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
+            <Text style={styles.label}>{t('login.passwordLabel')}</Text>
             <View style={[styles.inputWrapper, errors.password ? styles.inputError : null]}>
               <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="Enter your password"
+                placeholder={t('login.passwordPlaceholder')}
                 value={password}
                 onChangeText={(text) => {
                   setPassword(text);
@@ -145,7 +163,7 @@ export default function LoginScreen({ navigation }: any) {
 
           {/* Forgot Password */}
           <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            <Text style={styles.forgotPasswordText}>{t('login.forgotPassword')}</Text>
           </TouchableOpacity>
 
           {/* Login Button */}
@@ -157,22 +175,22 @@ export default function LoginScreen({ navigation }: any) {
             {loading ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text style={styles.loginButtonText}>Login</Text>
+              <Text style={styles.loginButtonText}>{t('login.submit')}</Text>
             )}
           </TouchableOpacity>
 
           {/* Divider */}
           <View style={styles.divider}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>OR</Text>
+            <Text style={styles.dividerText}>{t('login.or')}</Text>
             <View style={styles.dividerLine} />
           </View>
 
           {/* Register Link */}
           <View style={styles.registerContainer}>
-            <Text style={styles.registerText}>Don't have an account? </Text>
+            <Text style={styles.registerText}>{t('login.noAccount')}</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.registerLink}>Sign Up</Text>
+              <Text style={styles.registerLink}>{t('login.signUp')}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -195,6 +213,33 @@ const styles = StyleSheet.create({
   header: {
     alignItems: 'center',
     marginBottom: 40,
+  },
+  languageRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 24,
+  },
+  languagePill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  languagePillActive: {
+    backgroundColor: '#1B8B4D',
+    borderColor: '#1B8B4D',
+  },
+  languagePillText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '600',
+  },
+  languagePillTextActive: {
+    color: '#fff',
   },
   logoContainer: {
     width: 100,

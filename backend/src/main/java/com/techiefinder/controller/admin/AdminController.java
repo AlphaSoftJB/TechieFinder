@@ -1,16 +1,19 @@
 package com.techiefinder.controller.admin;
 
 import com.techiefinder.dto.admin.AdminStatsDto;
+import com.techiefinder.dto.admin.CertificationVerificationUpdateRequest;
 import com.techiefinder.dto.admin.TechnicianVerificationUpdateRequest;
 import com.techiefinder.dto.admin.UserStatusUpdateRequest;
 import com.techiefinder.dto.booking.BookingDto;
 import com.techiefinder.dto.rating.RatingDto;
+import com.techiefinder.dto.technician.TechnicianCertificationDto;
 import com.techiefinder.dto.technician.TechnicianDto;
 import com.techiefinder.dto.user.UserDto;
 import com.techiefinder.service.admin.AdminStatsService;
 import com.techiefinder.service.booking.BookingService;
 import com.techiefinder.service.rating.RatingService;
 import com.techiefinder.service.technician.TechnicianAccountService;
+import com.techiefinder.service.technician.TechnicianCertificationService;
 import com.techiefinder.service.user.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +46,9 @@ public class AdminController {
 
     @Autowired
     private RatingService ratingService;
+
+    @Autowired
+    private TechnicianCertificationService certificationService;
 
     @GetMapping("/stats")
     public ResponseEntity<AdminStatsDto> getStats() {
@@ -84,5 +90,16 @@ public class AdminController {
     public ResponseEntity<Void> deleteRating(@PathVariable Long id) {
         ratingService.deleteRating(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/certifications")
+    public ResponseEntity<List<TechnicianCertificationDto>> getAllCertifications() {
+        return ResponseEntity.ok(certificationService.getAllCertifications());
+    }
+
+    @PatchMapping("/certifications/{id}/verification")
+    public ResponseEntity<TechnicianCertificationDto> setCertificationVerification(
+            @PathVariable Long id, @Valid @RequestBody CertificationVerificationUpdateRequest request) {
+        return ResponseEntity.ok(certificationService.updateVerificationStatus(id, request.getStatus()));
     }
 }

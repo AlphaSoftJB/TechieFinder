@@ -11,8 +11,8 @@ import java.util.Set;
 
 @Entity
 @Table(name = "technicians")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

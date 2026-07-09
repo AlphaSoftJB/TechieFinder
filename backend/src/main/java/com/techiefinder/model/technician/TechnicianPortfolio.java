@@ -6,8 +6,8 @@ import lombok.*;
 
 @Entity
 @Table(name = "technician_portfolios")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

@@ -15,38 +15,49 @@ TechieFinder is a platform for the Nigerian market that connects users with loca
 ## Status
 
 All three apps run and interoperate against a real backend today, verified end-to-end
-(automated backend/mobile tests plus a full browser-driven walkthrough of the web app):
-register → set up a technician (location + service offering) → category/geo search finds
-them → book → confirm → pay → complete → rate → message → notifications fire throughout.
+(automated backend/mobile/web tests plus a full browser-driven walkthrough): register →
+set up a technician (location + service offering + portfolio/certifications) →
+category/geo/recommended search finds them → book → confirm → pay → complete → rate →
+message → notifications fire throughout → admin can moderate all of it.
 
-**Not yet implemented** (see [Roadmap](#roadmap)): real Paystack/Flutterwave gateway calls
-(payments currently settle against a simulated wallet — see
-`backend/.../service/payment/PaymentService.java`), push/SMS/email
-delivery, technician portfolio/certification upload, and multi-language support.
+**Configurable but requires your own credentials to go live** (safe no-op without them —
+see [Roadmap](#roadmap)): real Paystack/Flutterwave gateway calls (defaults to an instant
+simulated wallet settlement), and push (Firebase)/email (SMTP)/SMS (Termii) delivery
+(defaults to in-app notifications only).
 
 ---
 
 ## Features
 
 ### For Users
-- **Search**: Find technicians by service category, or by location (geo-radius, via the browser/device's location)
+- **Search**: Find technicians by service category, by location (geo-radius), or via
+  **Recommended for you** — a transparent, explainable weighted-score ranking (rating,
+  completion rate, proximity, category match with your booking history, verification
+  status), not a black-box ML call
 - **Multi-Platform**: Web app and native mobile app (iOS & Android, via Expo)
+- **Multi-Language**: English, Yorùbá, Igbo, and Hausa (web has a full language switcher;
+  mobile currently covers the login screen)
 - **Reviews & Ratings**: Rate a completed booking once; technician's average updates automatically
 - **Booking**: Request a booking with a technician, track its status through completion
 - **Messaging**: Message a technician directly, tied to their profile
-- **Wallet Payments**: Settle a booking's payment instantly (real payment gateway integration not yet wired up)
-- **Notifications**: In-app notifications for booking/payment/rating/message events
+- **Payments**: Settle a booking instantly via wallet by default, or through a real Paystack/
+  Flutterwave checkout once configured (see [Roadmap](#roadmap))
+- **Notifications**: In-app always; push/email/SMS additionally once configured
 
 ### For Technicians
 - **Dashboard**: Confirm/reject/start/complete jobs, view stats
 - **Service Offerings**: Declare what services you offer, under which category, at what price
 - **Service Area**: Set your location and service radius so nearby customers can find you
+- **Portfolio**: Upload photos of past work, shown on your public profile
+- **Certifications**: Upload credentials for admin verification; verified ones show a badge
 - **Availability**: `available`/`acceptingJobs` flags control whether you show up in search
 
 ### For Admins
-- **Dashboard**: Platform-wide stats (users, technicians, bookings, revenue, ratings)
+- **Dashboard**: Platform-wide stats (users, technicians, bookings, revenue, ratings,
+  pending technician/certification verifications)
 - **User Management**: Suspend/reactivate any non-admin account
 - **Technician Verification**: Approve, reject, or suspend a technician's verification status
+- **Certification Verification**: Approve or reject a technician's uploaded credentials
 - **Booking Oversight**: View every booking on the platform
 - **Content Moderation**: View and remove reviews
 
@@ -55,12 +66,16 @@ A default admin account is seeded on first startup (`admin@techiefinder.com` /
 can never self-register with the `ADMIN` role; admins are seeded or created by
 an existing admin only.
 
+### Configurable, requires your own credentials
+- **Real payment gateway**: set `PAYMENT_GATEWAY_PROVIDER=paystack` (or `flutterwave`) plus
+  the matching secret key; without it, payments settle instantly against a simulated wallet
+- **Push notifications**: point `FIREBASE_CONFIG_PATH` at a real Firebase service account
+- **Email**: set `EMAIL_USERNAME`/`EMAIL_PASSWORD` to a real SMTP account
+- **SMS**: set `SMS_API_KEY` to a real Termii key
+
 ### Planned (not yet built)
 - Content moderation beyond review removal (flagging, reports)
-- Technician portfolio photos and certification upload + verification workflow
-- Push notifications (Firebase), SMS, and email delivery
-- Real payment gateway integration (Paystack/Flutterwave)
-- Multi-language support (English, Yoruba, Igbo, Hausa)
+- Mobile: portfolio/certification upload UI, full-app translation (currently login-screen only)
 
 ---
 
@@ -411,25 +426,31 @@ For technical support or questions:
 ## Roadmap
 
 ### Done
-- Backend: auth, technician profiles/search (category + geo-radius), booking
-  lifecycle, wallet-based payments, ratings, messaging, notifications, global
-  error handling
-- Web app: full golden-path UI against the real backend
-- Mobile app: full golden-path UI against the real backend
-- Admin dashboard: stats, user suspension, technician verification, booking
-  oversight, review moderation (backend + web UI)
-- Tests: backend (JUnit/MockMvc), mobile (Jest/RNTL)
-- DevOps: Dockerfiles, docker-compose, CI (backend/mobile/web)
+- Backend: auth, technician profiles/search (category + geo-radius + recommended),
+  booking lifecycle, payments (wallet + real Paystack/Flutterwave integration),
+  ratings, messaging, notifications (in-app + push/email/SMS), global error handling
+- Web app: full golden-path UI against the real backend, i18n (en/yo/ig/ha)
+- Mobile app: full golden-path UI against the real backend, i18n (login screen)
+- Admin dashboard: stats, user suspension, technician verification, certification
+  verification, booking oversight, review moderation (backend + web UI)
+- Technician portfolio photo and certification upload + admin verification workflow
+- Heuristic "recommended for you" technician ranking (rating, completion rate,
+  proximity, category match, verification — transparent, not a black-box ML call)
+- Tests: backend (JUnit/MockMvc, 35 tests), mobile (Jest/RNTL, 10 tests),
+  web (Vitest/RTL, 14 tests)
+- DevOps: Dockerfiles, docker-compose (incl. an uploads volume), CI (backend/mobile/web)
 
 ### Next
-- Real Paystack/Flutterwave gateway integration (currently a wallet simulation)
-- Technician portfolio photos and certification upload/verification
-- Push notifications (Firebase), SMS, email delivery
-- Web/mobile unit and component test coverage beyond the current smoke tests
+- Mobile: portfolio/certification upload UI (web already has it)
+- Mobile: translate the rest of the app beyond the login screen
+- Content moderation beyond review removal (flagging, reports)
+- Real payment gateway / push / email / SMS credentials are a deployment
+  decision, not a code gap — see "Configurable, requires your own credentials"
+  above for what to set
 
 ### Later
-- Multi-language support (English, Yoruba, Igbo, Hausa)
-- AI-powered technician recommendations
+- Real-time in-app chat (currently polling-based)
+- Technician earnings payout flow (withdraw wallet balance to a bank account)
 
 ---
 

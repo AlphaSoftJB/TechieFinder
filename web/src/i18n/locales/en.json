@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "findTechnician": "Find a Technician",
+    "dashboard": "Dashboard",
+    "admin": "Admin",
+    "login": "Log in",
+    "signup": "Sign up",
+    "logout": "Log out",
+    "hi": "Hi, {{name}}"
+  },
+  "footer": {
+    "tagline": "TechieFinder — connecting Nigerians with skilled local technicians."
+  },
+  "home": {
+    "heroTitle": "Find skilled technicians near you",
+    "heroSubtitle": "Plumbers, electricians, mechanics, and more — verified and rated by real customers across Nigeria.",
+    "heroCta": "Find a technician",
+    "browseByCategory": "Browse by category",
+    "featuredTechnicians": "Recommended for you",
+    "loading": "Loading...",
+    "noTechnicians": "No technicians available yet.",
+    "defaultBio": "Professional Technician",
+    "verified": "Verified"
+  },
+  "login": {
+    "title": "Welcome back",
+    "subtitle": "Log in to book and manage your services.",
+    "email": "Email",
+    "password": "Password",
+    "submit": "Log in",
+    "submitting": "Logging in...",
+    "noAccount": "Don't have an account?",
+    "signUp": "Sign up"
+  },
+  "register": {
+    "title": "Create your account",
+    "subtitle": "Join TechieFinder to find or offer local services.",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "email": "Email",
+    "phoneNumber": "Phone number",
+    "password": "Password",
+    "roleUser": "I need a technician",
+    "roleTechnician": "I am a technician",
+    "submit": "Create account",
+    "submitting": "Creating account...",
+    "haveAccount": "Already have an account?",
+    "logIn": "Log in"
+  },
+  "language": {
+    "label": "Language"
+  }
+}

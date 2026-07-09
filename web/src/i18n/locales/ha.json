@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "findTechnician": "Nemo Kwararre",
+    "dashboard": "Dashboard",
+    "admin": "Mai Gudanarwa",
+    "login": "Shiga",
+    "signup": "Yi Rijista",
+    "logout": "Fita",
+    "hi": "Sannu, {{name}}"
+  },
+  "footer": {
+    "tagline": "TechieFinder — tana haɗa 'yan Najeriya da ƙwararrun ma'aikata a unguwanninsu."
+  },
+  "home": {
+    "heroTitle": "Nemo ƙwararrun ma'aikata kusa da kai",
+    "heroSubtitle": "Masu gyaran famfo, injiniyoyin lantarki, makanikai, da sauransu — an tantance su kuma ainihin abokan ciniki a fadin Najeriya sun kimanta su.",
+    "heroCta": "Nemo kwararre",
+    "browseByCategory": "Bincika ta rukuni",
+    "featuredTechnicians": "Shawarwari a gare ka",
+    "loading": "Ana loda...",
+    "noTechnicians": "Babu kwararru a yanzu.",
+    "defaultBio": "Kwararren Ma'aikaci",
+    "verified": "An Tantance"
+  },
+  "login": {
+    "title": "Barka da dawowa",
+    "subtitle": "Shiga don yin oda da sarrafa ayyukanka.",
+    "email": "Imel",
+    "password": "Kalmar sirri",
+    "submit": "Shiga",
+    "submitting": "Ana shigarwa...",
+    "noAccount": "Ba ka da asusu?",
+    "signUp": "Yi rijista"
+  },
+  "register": {
+    "title": "Ƙirƙiri asusunka",
+    "subtitle": "Shiga TechieFinder don neman ko bayar da ayyuka a unguwarka.",
+    "firstName": "Suna na farko",
+    "lastName": "Sunan iyali",
+    "email": "Imel",
+    "phoneNumber": "Lambar waya",
+    "password": "Kalmar sirri",
+    "roleUser": "Ina bukatar kwararre",
+    "roleTechnician": "Ni kwararre ne",
+    "submit": "Ƙirƙiri asusu",
+    "submitting": "Ana ƙirƙirar asusu...",
+    "haveAccount": "Kana da asusu tuni?",
+    "logIn": "Shiga"
+  },
+  "language": {
+    "label": "Harshe"
+  }
+}

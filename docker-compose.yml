@@ -23,14 +23,34 @@ services:
       mysql:
         condition: service_healthy
     environment:
-      SPRING_PROFILES_ACTIVE: prod
-      DATABASE_URL: jdbc:mysql://mysql:3306/techiefinder
-      DATABASE_USERNAME: root
-      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-password}
-      JWT_SECRET: ${JWT_SECRET:-TechieFinderDevOnlySecretKeyForJWTHS512SigningRequiresAtLeast64ByteLongKey}
-      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      - SPRING_PROFILES_ACTIVE=prod
+      - DATABASE_URL=jdbc:mysql://mysql:3306/techiefinder
+      - DATABASE_USERNAME=root
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD:-password}
+      - JWT_SECRET=${JWT_SECRET:-TechieFinderDevOnlySecretKeyForJWTHS512SigningRequiresAtLeast64ByteLongKey}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@techiefinder.com}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-ChangeMe123!}
+      - PAYMENT_GATEWAY_PROVIDER=${PAYMENT_GATEWAY_PROVIDER:-wallet}
+      - PAYSTACK_SECRET_KEY=${PAYSTACK_SECRET_KEY:-}
+      - PAYSTACK_PUBLIC_KEY=${PAYSTACK_PUBLIC_KEY:-}
+      - FLUTTERWAVE_SECRET_KEY=${FLUTTERWAVE_SECRET_KEY:-}
+      - FLUTTERWAVE_PUBLIC_KEY=${FLUTTERWAVE_PUBLIC_KEY:-}
+      - FLUTTERWAVE_WEBHOOK_SECRET_HASH=${FLUTTERWAVE_WEBHOOK_SECRET_HASH:-}
+      - EMAIL_USERNAME=${EMAIL_USERNAME:-}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
+      - SMS_API_KEY=${SMS_API_KEY:-}
+      # Passthrough form (no default): omitted from the container entirely if
+      # unset in .env, so Spring's own property defaults apply. A mapped
+      # "VAR=${VAR:-}" would instead pass an explicit empty string, which wins
+      # over Spring's colon-default and breaks the safe-fallback behavior for
+      # these two specifically (see PushNotificationClient, PaymentService).
+      - PAYMENT_CALLBACK_URL
+      - FIREBASE_CONFIG_PATH
     ports:
       - "8080:8080"
+    volumes:
+      - uploads_data:/var/techiefinder/uploads
 
   web:
     build:
@@ -43,3 +63,4 @@ services:
 
 volumes:
   mysql_data:
+  uploads_data:

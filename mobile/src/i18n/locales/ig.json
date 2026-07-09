@@ -1,0 +1,24 @@
+{
+  "login": {
+    "title": "TechieFinder",
+    "subtitle": "Chọta ndị ọrụ aka nwere nka nso gị",
+    "emailLabel": "Adreesị Email",
+    "emailPlaceholder": "Tinye email gị",
+    "passwordLabel": "Okwuntughe",
+    "passwordPlaceholder": "Tinye okwuntughe gị",
+    "forgotPassword": "Ichefuru okwuntughe?",
+    "submit": "Banye",
+    "or": "MA Ọ BỤ",
+    "noAccount": "Ị nweghị akaụntụ? ",
+    "signUp": "Debanye Aha",
+    "emailRequired": "Achọrọ email",
+    "emailInvalid": "Biko tinye email ziri ezi",
+    "passwordRequired": "Achọrọ okwuntughe",
+    "passwordTooShort": "Okwuntughe ga-adị opekempe mkpụrụedemede isii",
+    "failedTitle": "Ịbanye Adaghị",
+    "failedDefault": "Email ma ọ bụ okwuntughe ezighi ezi. Biko nwaa ọzọ."
+  },
+  "language": {
+    "label": "Asụsụ"
+  }
+}

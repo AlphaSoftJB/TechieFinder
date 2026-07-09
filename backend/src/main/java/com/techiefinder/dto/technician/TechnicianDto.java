@@ -20,4 +20,5 @@ public class TechnicianDto {
     private String businessName;
     private String bio;
     private Integer yearsOfExperience;
+    private Double matchScore; // only populated by the recommendation endpoint
 }

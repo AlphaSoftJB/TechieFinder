@@ -12,6 +12,7 @@ import {
   TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '../contexts/AuthContext';
 import api, { apiErrorMessage } from '../services/api';
 
@@ -62,8 +63,28 @@ export default function UserDashboardScreen() {
 
   const handlePay = async (bookingId: number) => {
     try {
-      await api.post(`/payments/bookings/${bookingId}/pay`);
-      Alert.alert('Payment successful');
+      const response = await api.post(`/payments/bookings/${bookingId}/pay`);
+      const payment = response.data;
+
+      if (payment.requiresRedirect && payment.authorizationUrl) {
+        // A real gateway (Paystack/Flutterwave) is configured: open its hosted
+        // checkout, then verify by reference once the browser closes -- no
+        // deep link/custom URL scheme needed since we already know the
+        // reference from this response.
+        await WebBrowser.openBrowserAsync(payment.authorizationUrl);
+        try {
+          const verified = await api.get(`/payments/verify/${payment.transactionReference}`);
+          if (verified.data.status === 'SUCCESS') {
+            Alert.alert('Payment successful');
+          } else {
+            Alert.alert('Payment not completed', 'You can try again from the booking.');
+          }
+        } catch (verifyError: any) {
+          Alert.alert('Could not confirm payment', apiErrorMessage(verifyError, 'Please try again.'));
+        }
+      } else {
+        Alert.alert('Payment successful');
+      }
       load();
     } catch (error: any) {
       Alert.alert('Payment failed', apiErrorMessage(error, 'Please try again.'));

@@ -1,0 +1,24 @@
+{
+  "login": {
+    "title": "TechieFinder",
+    "subtitle": "Nemo ƙwararrun ma'aikata kusa da kai",
+    "emailLabel": "Adireshin Imel",
+    "emailPlaceholder": "Shigar da imel dinka",
+    "passwordLabel": "Kalmar Sirri",
+    "passwordPlaceholder": "Shigar da kalmar sirrinka",
+    "forgotPassword": "Ka manta kalmar sirri?",
+    "submit": "Shiga",
+    "or": "KO",
+    "noAccount": "Ba ka da asusu? ",
+    "signUp": "Yi Rijista",
+    "emailRequired": "Ana bukatar imel",
+    "emailInvalid": "Da fatan za a shigar da imel mai inganci",
+    "passwordRequired": "Ana bukatar kalmar sirri",
+    "passwordTooShort": "Kalmar sirri dole ta kasance akalla haruffa shida",
+    "failedTitle": "Shiga Ya Kasa",
+    "failedDefault": "Imel ko kalmar sirri ba daidai ba. Da fatan za a sake gwadawa."
+  },
+  "language": {
+    "label": "Harshe"
+  }
+}

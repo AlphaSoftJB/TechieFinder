@@ -10,6 +10,7 @@ public class AdminStatsDto {
     private long totalCustomers;
     private long totalTechnicians;
     private long pendingTechnicianVerifications;
+    private long pendingCertificationVerifications;
     private long totalBookings;
     private long pendingBookings;
     private long completedBookings;

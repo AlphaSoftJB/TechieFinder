@@ -1,0 +1,24 @@
+{
+  "login": {
+    "title": "TechieFinder",
+    "subtitle": "Find skilled technicians near you",
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "Enter your email",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "forgotPassword": "Forgot Password?",
+    "submit": "Login",
+    "or": "OR",
+    "noAccount": "Don't have an account? ",
+    "signUp": "Sign Up",
+    "emailRequired": "Email is required",
+    "emailInvalid": "Please enter a valid email",
+    "passwordRequired": "Password is required",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "failedTitle": "Login Failed",
+    "failedDefault": "Invalid email or password. Please try again."
+  },
+  "language": {
+    "label": "Language"
+  }
+}

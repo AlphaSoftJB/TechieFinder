@@ -8,6 +8,7 @@ import com.techiefinder.dto.technician.TechnicianLocationRequest;
 import com.techiefinder.security.CustomUserDetails;
 import com.techiefinder.service.technician.ServiceOfferingService;
 import com.techiefinder.service.technician.TechnicianAccountService;
+import com.techiefinder.service.technician.TechnicianRecommendationService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,9 @@ public class TechnicianController {
 
     @Autowired
     private ServiceOfferingService serviceOfferingService;
+
+    @Autowired
+    private TechnicianRecommendationService technicianRecommendationService;
 
     @PostMapping("/create/{userId}")
     @PreAuthorize("hasAnyRole('TECHNICIAN', 'ADMIN')")
@@ -63,6 +67,23 @@ public class TechnicianController {
             @RequestParam Double longitude,
             @RequestParam(defaultValue = "15") Double radiusKm) {
         return ResponseEntity.ok(technicianAccountService.findNearby(latitude, longitude, radiusKm));
+    }
+
+    /**
+     * "Recommended for you" -- ranked by a transparent weighted score (rating,
+     * completion rate, proximity, category match with the caller's booking
+     * history, verification status), not by an external ML/LLM call. Works for
+     * guests (rating/verification/proximity only) and personalizes further for
+     * a logged-in caller via their past bookings.
+     */
+    @GetMapping("/recommended")
+    public ResponseEntity<List<TechnicianDto>> getRecommendedTechnicians(
+            @RequestParam(required = false) Double latitude,
+            @RequestParam(required = false) Double longitude,
+            @RequestParam(defaultValue = "10") int limit,
+            @AuthenticationPrincipal CustomUserDetails principal) {
+        Long userId = principal != null ? principal.getId() : null;
+        return ResponseEntity.ok(technicianRecommendationService.recommend(userId, latitude, longitude, limit));
     }
 
     @PostMapping("/me/services")

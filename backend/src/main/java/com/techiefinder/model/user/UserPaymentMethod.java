@@ -6,8 +6,8 @@ import lombok.*;
 
 @Entity
 @Table(name = "user_payment_methods")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

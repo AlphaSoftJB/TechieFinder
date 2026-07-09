@@ -6,8 +6,8 @@ import lombok.*;
 
 @Entity
 @Table(name = "service_categories")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

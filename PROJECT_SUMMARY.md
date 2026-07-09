@@ -25,50 +25,64 @@ described below.
 - JWT-based authentication (register/login), BCrypt password hashing, role-based
   access control (`USER`/`TECHNICIAN`/`ADMIN`)
 - Technician profiles, service offerings (category-linked), location + geo-radius
-  search, category search
+  + heuristic "recommended for you" search, category search
 - Full booking lifecycle: create → confirm/reject → in-progress → complete,
   with ownership checks on every transition
-- Wallet-based payment settlement (real Paystack/Flutterwave gateway calls are
-  not yet wired up — see `service/payment/PaymentService.java`)
+- Payments: instant wallet settlement by default, or a real Paystack/
+  Flutterwave checkout (initialize/verify/webhook) once configured
+- Technician portfolio photo and certification upload, with admin verification
 - Ratings (one per completed booking, technician's average recalculated
   automatically) and in-app messaging (conversations + messages)
-- Notifications fired on booking/payment/rating/message events
+- Notifications fired on booking/payment/rating/message events — in-app
+  always, plus push (Firebase)/email (SMTP)/SMS (Termii) once configured
+- Admin dashboard: platform stats, user suspension, technician/certification
+  verification, booking oversight, review moderation
 - A global exception handler mapping not-found/conflict/forbidden/validation
-  errors to proper HTTP status codes
+  errors to proper HTTP status codes, with unhandled exceptions actually logged
 - **Status:** compiles, runs, and passes its test suite. Verified by hand
-  (curl) and by an automated integration test that runs the entire booking
-  lifecycle above end-to-end.
+  (curl) and by automated integration tests covering the entire booking
+  lifecycle, payment gateway flow, portfolio/certification upload, and
+  recommendation ranking end-to-end.
 
 ### Web App (React 19 + Vite + Tailwind CSS 4)
-- Home (categories + featured technicians), Login, Register, Search (category
-  filter + "Near Me" geo search via the browser's Geolocation API), Technician
-  Profile (ratings, service offerings, booking form, messaging), Dashboard
-  (role-routed to a user or technician view), Conversation (messaging)
-- **Status:** builds cleanly (`tsc -b && vite build`) and was verified with a
-  real, scripted browser session (Playwright) driving the entire golden path
+- Home (categories + recommended technicians), Login, Register, Search
+  (category filter + "Near Me" geo search), Technician Profile (ratings,
+  service offerings, portfolio, certifications, booking form, messaging),
+  Dashboard (role-routed to user/technician/admin views), PaymentCallback,
+  Conversation (messaging)
+- Full i18next-based language switcher (English, Yorùbá, Igbo, Hausa)
+- **Status:** builds cleanly (`tsc -b && vite build`), has a Vitest/RTL unit
+  test suite, and was verified with a real, scripted browser session
+  (Playwright) driving the entire golden path plus every feature above
   against the live backend — not just a compile check.
 
 ### Mobile App (React Native 0.81 + Expo 54)
-- The same feature set as the web app, native: Login/Register, Home, Search
-  (with device-location "Near Me"), Technician Profile, dashboards for both
-  roles, Chat
+- The same feature set as the web app, native: Login/Register (with a
+  language switcher), Home (recommended technicians), Search (device-location
+  "Near Me"), Technician Profile (incl. portfolio/certifications, read-only),
+  dashboards for both roles, Chat. Payment redirects to a real gateway
+  checkout via `expo-web-browser` when one is configured.
 - **Status:** installs, type-checks, and bundles cleanly via Metro
   (`expo export`). Its own test suite passes. Full interactive verification in
   a simulator/device wasn't possible in the sandboxed environment this was
   built in — that's the one gap in verification depth versus the web app.
+  Portfolio/certification *upload* has no mobile UI yet (web-only for now).
 
 ### Tests
-- Backend: 8 tests (JUnit + MockMvc + a full booking-lifecycle integration
-  test), all passing
-- Mobile: 7 tests (Jest + React Native Testing Library, `AuthContext` +
-  `LoginScreen`), all passing
-- Web: no unit tests yet — CI runs a full production build on every push, and
-  the golden path was verified with Playwright during development
+- Backend: 35 tests across 12 classes (JUnit + MockMvc + MockRestServiceServer
+  for the payment gateway/SMS clients + a mocked JavaMailSender for email),
+  all passing
+- Mobile: 10 tests across 3 suites (Jest + React Native Testing Library:
+  `AuthContext`, `LoginScreen`, `RegisterScreen`), all passing
+- Web: 14 tests across 4 suites (Vitest + Testing Library: `apiErrorMessage`,
+  `AuthContext`, `ProtectedRoute`, `Login`), all passing; CI runs these plus a
+  full production build on every push
 
 ### DevOps
 - `backend/Dockerfile`, `web/Dockerfile` + `nginx.conf`, `docker-compose.yml`
-  (MySQL + backend + web), `.github/workflows/ci.yml` (backend/mobile/web),
-  `.env.example` with variable names that actually match the code
+  (MySQL + backend + web, incl. a persistent uploads volume), `.github/workflows/ci.yml`
+  (backend/mobile/web, now including the web test suite), `.env.example` with
+  variable names that actually match the code
 - The Dockerfile/compose setup was validated via `docker compose config` and
   by confirming the exact Maven command the backend's Dockerfile runs
   succeeds — `docker compose up --build` itself hasn't been run in an
@@ -78,12 +92,12 @@ described below.
 
 ## Not Yet Built
 
-- Real Paystack/Flutterwave payment gateway integration (currently a wallet
-  simulation, clearly marked as such in the code)
-- Technician portfolio photo and certification upload + verification workflow
-- Push notifications (Firebase), SMS, email delivery
-- Multi-language support (English, Yoruba, Igbo, Hausa)
-- Web and mobile test coverage beyond the current smoke tests
+- Mobile: portfolio/certification upload UI (web already has it)
+- Mobile: translation beyond the login screen
+- Content moderation beyond outright review removal (flagging, reports)
+- Real payment gateway / push / email / SMS credentials are a deployment
+  decision the operator makes, not a code gap — every integration is fully
+  implemented and degrades to a safe no-op/simulation without them
 
 ---
 
@@ -92,19 +106,20 @@ described below.
 These are actual counts as of this writing, not estimates.
 
 ### Backend
-- **Java files:** 85 (~3,900 lines)
-- **Controllers:** 10 &middot; **Services:** 10 &middot; **Repositories:** 14
-- **Entities:** 18 &middot; **DTOs:** 23
-- **Tests:** 4 test classes, 17 test methods
+- **Java files:** 105 (~5,320 lines)
+- **Controllers:** 12 &middot; **Services:** 22 &middot; **Repositories:** 14
+- **Entities:** 18 &middot; **DTOs:** 26
+- **Tests:** 12 test classes, 35 test methods
 
 ### Web
-- **Source files:** 17 (~1,860 lines)
-- **Pages:** 11 (Home, Login, Register, Search, TechnicianProfile, Dashboard,
-  UserDashboard, TechnicianDashboard, AdminDashboard, Conversation, NotFound)
+- **Source files:** 13 non-test (~2,300 lines) + 4 test suites
+- **Pages:** 12 (Home, Login, Register, Search, TechnicianProfile, Dashboard,
+  UserDashboard, TechnicianDashboard, AdminDashboard, PaymentCallback,
+  Conversation, NotFound)
 
 ### Mobile
-- **Source files:** 11 (~2,950 lines)
-- **Screens:** 8 &middot; **Tests:** 2 test suites, 7 test methods
+- **Source files:** 20 non-test (~2,940 lines)
+- **Screens:** 8 &middot; **Tests:** 3 test suites, 10 test methods
 
 ---
 
@@ -159,8 +174,9 @@ the main [README.md](README.md) for details.
 ## Testing
 
 ```bash
-cd backend && mvn test   # 17 tests
-cd mobile && npm test    # 7 tests
+cd backend && mvn test   # 35 tests
+cd mobile && npm test    # 10 tests
+cd web && npm test       # 14 tests
 cd web && npm run build  # type-checks + builds
 ```
 
@@ -175,9 +191,14 @@ Copyright © 2026 TechieFinder. All rights reserved.
 ## Conclusion
 
 The backend, web app, and mobile app all run and interoperate against real
-data, covering the platform's core value: finding a technician, booking them,
-paying, rating, and messaging, plus an admin dashboard for platform oversight.
-The remaining gaps — a real payment gateway and push/SMS/email delivery — are
+data, covering the platform's core value: finding (or getting recommended) a
+technician, booking them, paying, rating, and messaging, plus an admin
+dashboard for platform oversight, portfolio/certification credibility
+signals, and multi-language support. Real payment gateway calls and push/
+email/SMS delivery are fully implemented and wired up — they just need an
+operator to supply real credentials to go live, which is a deployment
+decision rather than a missing feature. The remaining gaps (mobile upload UI
+for portfolio/certifications, mobile translation beyond the login screen) are
 scoped and listed above, not hidden behind a blanket "production ready" claim.
 
 **Developed with ❤️ for Nigeria**

@@ -28,6 +28,21 @@ interface Offering {
   basePrice: number;
 }
 
+interface PortfolioItem {
+  id: number;
+  title: string;
+  description: string | null;
+  imageUrl: string;
+  categoryName: string | null;
+}
+
+interface Certification {
+  id: number;
+  name: string;
+  issuingOrganization: string;
+  verificationStatus: string;
+}
+
 export default function TechnicianProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -36,6 +51,8 @@ export default function TechnicianProfile() {
   const [technician, setTechnician] = useState<Technician | null>(null);
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [offerings, setOfferings] = useState<Offering[]>([]);
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const [certifications, setCertifications] = useState<Certification[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -49,11 +66,15 @@ export default function TechnicianProfile() {
       api.get(`/technicians/${id}`),
       api.get(`/ratings/technician/${id}`),
       api.get(`/technicians/${id}/services`),
+      api.get(`/technicians/${id}/portfolio`),
+      api.get(`/technicians/${id}/certifications`),
     ])
-      .then(([technicianRes, ratingsRes, offeringsRes]) => {
+      .then(([technicianRes, ratingsRes, offeringsRes, portfolioRes, certificationsRes]) => {
         setTechnician(technicianRes.data);
         setRatings(ratingsRes.data);
         setOfferings(offeringsRes.data);
+        setPortfolio(portfolioRes.data);
+        setCertifications(certificationsRes.data.filter((c: Certification) => c.verificationStatus === 'VERIFIED'));
       })
       .catch((error) => console.error('Error loading technician profile:', error))
       .finally(() => setLoading(false));
@@ -136,6 +157,33 @@ export default function TechnicianProfile() {
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {certifications.length > 0 && (
+          <div className="mt-6">
+            <h2 className="mb-2 font-semibold text-neutral-900">Certifications</h2>
+            <div className="flex flex-wrap gap-2">
+              {certifications.map((c) => (
+                <span key={c.id} className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
+                  &#10003; {c.name} &middot; {c.issuingOrganization}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {portfolio.length > 0 && (
+          <div className="mt-6">
+            <h2 className="mb-2 font-semibold text-neutral-900">Portfolio</h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {portfolio.map((item) => (
+                <div key={item.id} className="overflow-hidden rounded-lg border border-neutral-200">
+                  <img src={item.imageUrl} alt={item.title} className="h-28 w-full object-cover" />
+                  <p className="truncate p-1.5 text-xs font-medium text-neutral-700">{item.title}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

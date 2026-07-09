@@ -4,19 +4,22 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  Image,
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import api, { apiErrorMessage } from '../services/api';
+import api, { apiErrorMessage, apiOrigin } from '../services/api';
 
 export default function TechnicianProfileScreen({ route, navigation }: any) {
   const { technicianId } = route.params;
   const [technician, setTechnician] = useState<any>(null);
   const [ratings, setRatings] = useState<any[]>([]);
   const [offerings, setOfferings] = useState<any[]>([]);
+  const [portfolio, setPortfolio] = useState<any[]>([]);
+  const [certifications, setCertifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBookingForm, setShowBookingForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -37,14 +40,18 @@ export default function TechnicianProfileScreen({ route, navigation }: any) {
   const loadProfile = async () => {
     setLoading(true);
     try {
-      const [technicianResponse, ratingsResponse, offeringsResponse] = await Promise.all([
+      const [technicianResponse, ratingsResponse, offeringsResponse, portfolioResponse, certificationsResponse] = await Promise.all([
         api.get(`/technicians/${technicianId}`),
         api.get(`/ratings/technician/${technicianId}`),
         api.get(`/technicians/${technicianId}/services`),
+        api.get(`/technicians/${technicianId}/portfolio`),
+        api.get(`/technicians/${technicianId}/certifications`),
       ]);
       setTechnician(technicianResponse.data);
       setRatings(ratingsResponse.data);
       setOfferings(offeringsResponse.data);
+      setPortfolio(portfolioResponse.data);
+      setCertifications(certificationsResponse.data.filter((c: any) => c.verificationStatus === 'VERIFIED'));
     } catch (error) {
       Alert.alert('Error', apiErrorMessage(error, 'Could not load this technician.'));
       navigation.goBack();
@@ -145,6 +152,34 @@ export default function TechnicianProfileScreen({ route, navigation }: any) {
         </View>
       )}
 
+      {certifications.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Certifications</Text>
+          <View style={styles.certRow}>
+            {certifications.map((c) => (
+              <View key={c.id} style={styles.certBadge}>
+                <Ionicons name="checkmark-circle" size={14} color="#1B8B4D" />
+                <Text style={styles.certText}>{c.name} · {c.issuingOrganization}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      {portfolio.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Portfolio</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {portfolio.map((item) => (
+              <View key={item.id} style={styles.portfolioCard}>
+                <Image source={{ uri: `${apiOrigin}${item.imageUrl}` }} style={styles.portfolioImage} />
+                <Text style={styles.portfolioTitle} numberOfLines={1}>{item.title}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Reviews ({ratings.length})</Text>
         {ratings.length === 0 ? (
@@ -225,6 +260,12 @@ const styles = StyleSheet.create({
   offeringCategory: { fontSize: 12, color: '#999', marginTop: 2 },
   offeringPrice: { fontSize: 14, fontWeight: 'bold', color: '#1B8B4D' },
   emptyText: { fontSize: 13, color: '#999' },
+  certRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  certBadge: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F0FDF4', borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
+  certText: { fontSize: 12, color: '#1B8B4D', fontWeight: '600' },
+  portfolioCard: { width: 120, marginRight: 12 },
+  portfolioImage: { width: 120, height: 90, borderRadius: 10, backgroundColor: '#F3F4F6' },
+  portfolioTitle: { fontSize: 12, color: '#333', marginTop: 4 },
   reviewCard: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
   reviewText: { fontSize: 13, color: '#555', marginTop: 6 },
   actionRow: { flexDirection: 'row', paddingHorizontal: 20, gap: 12, marginTop: 8 },

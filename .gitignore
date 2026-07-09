@@ -1,5 +1,6 @@
 # Backend (Maven)
 backend/target/
+backend/uploads/
 *.class
 
 # Mobile (Expo/React Native)

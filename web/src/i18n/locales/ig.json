@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "findTechnician": "Chọta Onye Ọrụ Aka",
+    "dashboard": "Ogbako",
+    "admin": "Onye Nchịkwa",
+    "login": "Banye",
+    "signup": "Debanye Aha",
+    "logout": "Pụọ",
+    "hi": "Ndewo, {{name}}"
+  },
+  "footer": {
+    "tagline": "TechieFinder — na-ejikọ ndị Naijirịa na ndị ọrụ aka nwere nka n'ógbè ha."
+  },
+  "home": {
+    "heroTitle": "Chọta ndị ọrụ aka nwere nka nso gị",
+    "heroSubtitle": "Ndị na-arụ ọrụ mmiri, ndị ọrụ ọkụ eletrik, ndị na-arụ ụgbọala, na ndị ọzọ — akwadoro ma nyochaa site n'aka ndị ahịa n'ezie n'ofe Naijirịa.",
+    "heroCta": "Chọta onye ọrụ aka",
+    "browseByCategory": "Chọọ dịka ụdị",
+    "featuredTechnicians": "Ndị a tụrụ aro maka gị",
+    "loading": "Na-ebu...",
+    "noTechnicians": "Enweghị onye ọrụ aka dị ugbu a.",
+    "defaultBio": "Onye Ọrụ Aka Ọkachamara",
+    "verified": "Akwadoro"
+  },
+  "login": {
+    "title": "Nnọọ ọzọ",
+    "subtitle": "Banye iji debie ma jikwaa ọrụ gị.",
+    "email": "Email",
+    "password": "Okwuntughe",
+    "submit": "Banye",
+    "submitting": "Na-abanye...",
+    "noAccount": "Ị nweghị akaụntụ?",
+    "signUp": "Debanye aha"
+  },
+  "register": {
+    "title": "Mepụta akaụntụ gị",
+    "subtitle": "Sonyere TechieFinder ịchọta ma ọ bụ nye ọrụ mpaghara.",
+    "firstName": "Aha mbụ",
+    "lastName": "Aha ikpeazụ",
+    "email": "Email",
+    "phoneNumber": "Nọmba ekwentị",
+    "password": "Okwuntughe",
+    "roleUser": "Achọrọ m onye ọrụ aka",
+    "roleTechnician": "Abụ m onye ọrụ aka",
+    "submit": "Mepụta akaụntụ",
+    "submitting": "Na-emepụta akaụntụ...",
+    "haveAccount": "Ị nweelarị akaụntụ?",
+    "logIn": "Banye"
+  },
+  "language": {
+    "label": "Asụsụ"
+  }
+}

@@ -6,6 +6,7 @@ interface Stats {
   totalCustomers: number;
   totalTechnicians: number;
   pendingTechnicianVerifications: number;
+  pendingCertificationVerifications: number;
   totalBookings: number;
   pendingBookings: number;
   completedBookings: number;
@@ -54,7 +55,17 @@ interface AdminRating {
   review: string;
 }
 
-type Tab = 'overview' | 'users' | 'technicians' | 'bookings' | 'reviews';
+interface AdminCertification {
+  id: number;
+  technicianId: number;
+  name: string;
+  issuingOrganization: string;
+  credentialId: string | null;
+  certificateUrl: string | null;
+  verificationStatus: string;
+}
+
+type Tab = 'overview' | 'users' | 'technicians' | 'bookings' | 'reviews' | 'certifications';
 
 const VERIFICATION_STATUSES = ['PENDING', 'VERIFIED', 'REJECTED', 'SUSPENDED'];
 
@@ -65,23 +76,26 @@ export default function AdminDashboard() {
   const [technicians, setTechnicians] = useState<AdminTechnician[]>([]);
   const [bookings, setBookings] = useState<AdminBooking[]>([]);
   const [ratings, setRatings] = useState<AdminRating[]>([]);
+  const [certifications, setCertifications] = useState<AdminCertification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     try {
-      const [statsRes, usersRes, techniciansRes, bookingsRes, ratingsRes] = await Promise.all([
+      const [statsRes, usersRes, techniciansRes, bookingsRes, ratingsRes, certificationsRes] = await Promise.all([
         api.get('/admin/stats'),
         api.get('/admin/users'),
         api.get('/admin/technicians'),
         api.get('/admin/bookings'),
         api.get('/admin/ratings'),
+        api.get('/admin/certifications'),
       ]);
       setStats(statsRes.data);
       setUsers(usersRes.data);
       setTechnicians(techniciansRes.data);
       setBookings(bookingsRes.data);
       setRatings(ratingsRes.data);
+      setCertifications(certificationsRes.data);
     } catch (err) {
       console.error('Error loading admin dashboard:', err);
     } finally {
@@ -123,6 +137,16 @@ export default function AdminDashboard() {
     }
   };
 
+  const setCertificationVerification = async (certificationId: number, status: string) => {
+    setError('');
+    try {
+      await api.patch(`/admin/certifications/${certificationId}/verification`, { status });
+      load();
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Could not update this certification.'));
+    }
+  };
+
   if (loading) return <p className="p-10 text-center text-neutral-500">Loading...</p>;
 
   return (
@@ -131,7 +155,7 @@ export default function AdminDashboard() {
       <p className="text-sm text-neutral-500">Platform overview and moderation tools.</p>
 
       <div className="mt-6 flex flex-wrap gap-2">
-        {(['overview', 'users', 'technicians', 'bookings', 'reviews'] as Tab[]).map((t) => (
+        {(['overview', 'users', 'technicians', 'bookings', 'reviews', 'certifications'] as Tab[]).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -152,6 +176,7 @@ export default function AdminDashboard() {
           <StatCard label="Customers" value={stats.totalCustomers} />
           <StatCard label="Technicians" value={stats.totalTechnicians} />
           <StatCard label="Pending Verifications" value={stats.pendingTechnicianVerifications} highlight={stats.pendingTechnicianVerifications > 0} />
+          <StatCard label="Pending Certifications" value={stats.pendingCertificationVerifications} highlight={stats.pendingCertificationVerifications > 0} />
           <StatCard label="Total Bookings" value={stats.totalBookings} />
           <StatCard label="Pending Bookings" value={stats.pendingBookings} />
           <StatCard label="Completed Bookings" value={stats.completedBookings} />
@@ -297,6 +322,50 @@ export default function AdminDashboard() {
             </div>
           ))}
           {ratings.length === 0 && <p className="text-neutral-500">No reviews yet.</p>}
+        </div>
+      )}
+
+      {tab === 'certifications' && (
+        <div className="mt-6 overflow-x-auto rounded-lg border border-neutral-200 bg-white">
+          <table className="w-full text-sm">
+            <thead className="bg-neutral-50 text-left text-neutral-500">
+              <tr>
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Issuing Organization</th>
+                <th className="px-4 py-3">Credential ID</th>
+                <th className="px-4 py-3">Document</th>
+                <th className="px-4 py-3">Verification</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100">
+              {certifications.map((c) => (
+                <tr key={c.id}>
+                  <td className="px-4 py-3 font-medium text-neutral-900">{c.name}</td>
+                  <td className="px-4 py-3 text-neutral-600">{c.issuingOrganization}</td>
+                  <td className="px-4 py-3 text-neutral-600">{c.credentialId || '—'}</td>
+                  <td className="px-4 py-3">
+                    {c.certificateUrl ? (
+                      <a href={c.certificateUrl} target="_blank" rel="noreferrer" className="text-emerald-700 underline">View</a>
+                    ) : '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <select
+                      value={c.verificationStatus}
+                      onChange={(e) => setCertificationVerification(c.id, e.target.value)}
+                      className="rounded-md border border-neutral-300 px-2 py-1 text-xs"
+                    >
+                      {['PENDING', 'VERIFIED', 'REJECTED'].map((s) => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </select>
+                  </td>
+                </tr>
+              ))}
+              {certifications.length === 0 && (
+                <tr><td colSpan={5} className="px-4 py-6 text-center text-neutral-500">No certifications submitted yet.</td></tr>
+              )}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

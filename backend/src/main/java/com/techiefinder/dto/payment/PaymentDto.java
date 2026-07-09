@@ -15,4 +15,6 @@ public class PaymentDto {
     private String status;
     private String gateway;
     private LocalDateTime paidAt;
+    private String authorizationUrl; // set only when a real gateway checkout redirect must be completed
+    private Boolean requiresRedirect;
 }

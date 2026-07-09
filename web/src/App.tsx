@@ -9,6 +9,7 @@ import Search from './pages/Search';
 import TechnicianProfile from './pages/TechnicianProfile';
 import Dashboard from './pages/Dashboard';
 import Conversation from './pages/Conversation';
+import PaymentCallback from './pages/PaymentCallback';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -34,6 +35,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Conversation />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payments/callback"
+            element={
+              <ProtectedRoute>
+                <PaymentCallback />
               </ProtectedRoute>
             }
           />

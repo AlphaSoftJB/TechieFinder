@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth, type UserRole } from '../contexts/AuthContext';
 
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [form, setForm] = useState({
     firstName: '', lastName: '', email: '', phoneNumber: '', password: '', role: 'USER' as UserRole,
   });
@@ -30,8 +32,8 @@ export default function Register() {
   return (
     <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-16">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-neutral-900">Create your account</h1>
-        <p className="mt-1 text-sm text-neutral-500">Join TechieFinder as a customer or a technician.</p>
+        <h1 className="text-2xl font-bold text-neutral-900">{t('register.title')}</h1>
+        <p className="mt-1 text-sm text-neutral-500">{t('register.subtitle')}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
@@ -43,44 +45,44 @@ export default function Register() {
             onClick={() => update('role', 'USER')}
             className={`flex-1 rounded-md border py-2 text-sm font-medium ${form.role === 'USER' ? 'border-emerald-700 bg-emerald-50 text-emerald-700' : 'border-neutral-300 text-neutral-600'}`}
           >
-            I need a service
+            {t('register.roleUser')}
           </button>
           <button
             type="button"
             onClick={() => update('role', 'TECHNICIAN')}
             className={`flex-1 rounded-md border py-2 text-sm font-medium ${form.role === 'TECHNICIAN' ? 'border-emerald-700 bg-emerald-50 text-emerald-700' : 'border-neutral-300 text-neutral-600'}`}
           >
-            I offer a service
+            {t('register.roleTechnician')}
           </button>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
-            First name
+            {t('register.firstName')}
             <input required value={form.firstName} onChange={(e) => update('firstName', e.target.value)}
               className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600" />
           </label>
           <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
-            Last name
+            {t('register.lastName')}
             <input required value={form.lastName} onChange={(e) => update('lastName', e.target.value)}
               className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600" />
           </label>
         </div>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
-          Email
+          {t('register.email')}
           <input type="email" required value={form.email} onChange={(e) => update('email', e.target.value)}
             className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600" />
         </label>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
-          Phone number
+          {t('register.phoneNumber')}
           <input value={form.phoneNumber} onChange={(e) => update('phoneNumber', e.target.value)}
             className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600" />
         </label>
 
         <label className="flex flex-col gap-1 text-sm font-medium text-neutral-700">
-          Password
+          {t('register.password')}
           <input type="password" required minLength={6} value={form.password} onChange={(e) => update('password', e.target.value)}
             className="rounded-md border border-neutral-300 px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600" />
         </label>
@@ -90,14 +92,14 @@ export default function Register() {
           disabled={loading}
           className="mt-2 rounded-md bg-emerald-700 py-2 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-60"
         >
-          {loading ? 'Creating account...' : 'Create account'}
+          {loading ? t('register.submitting') : t('register.submit')}
         </button>
       </form>
 
       <p className="text-center text-sm text-neutral-500">
-        Already have an account?{' '}
+        {t('register.haveAccount')}{' '}
         <Link to="/login" className="font-semibold text-emerald-700 hover:underline">
-          Log in
+          {t('register.logIn')}
         </Link>
       </p>
     </div>

@@ -9,8 +9,8 @@ import lombok.*;
 
 @Entity
 @Table(name = "ratings")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

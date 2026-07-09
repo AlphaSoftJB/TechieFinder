@@ -8,8 +8,8 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "technician_services")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

@@ -53,7 +53,16 @@ export default function UserDashboard() {
   const handlePay = async (bookingId: number) => {
     setError('');
     try {
-      await api.post(`/payments/bookings/${bookingId}/pay`);
+      const response = await api.post(`/payments/bookings/${bookingId}/pay`);
+      const payment = response.data;
+      if (payment.requiresRedirect && payment.authorizationUrl) {
+        // A real gateway (Paystack/Flutterwave) is configured: redirect to its
+        // hosted checkout. PaymentCallback verifies by reference once the
+        // gateway sends the browser back.
+        sessionStorage.setItem('techiefinder.pendingPaymentReference', payment.transactionReference);
+        window.location.href = payment.authorizationUrl;
+        return;
+      }
       load();
     } catch (err) {
       setError(apiErrorMessage(err, 'Payment failed.'));

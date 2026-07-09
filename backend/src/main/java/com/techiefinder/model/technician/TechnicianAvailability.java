@@ -9,8 +9,8 @@ import java.time.LocalTime;
 
 @Entity
 @Table(name = "technician_availability")
-@Data
-@EqualsAndHashCode(callSuper = true)
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder

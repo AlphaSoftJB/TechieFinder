@@ -42,7 +42,7 @@ export default function HomeScreen({ navigation }: any) {
     try {
       const [categoriesResponse, techniciansResponse] = await Promise.all([
         api.get('/public/categories'),
-        api.get('/technicians/available'),
+        api.get('/technicians/recommended', { params: { limit: 5 } }),
       ]);
       setCategories(categoriesResponse.data);
       setFeaturedTechnicians(techniciansResponse.data.slice(0, 5));

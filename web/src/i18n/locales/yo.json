@@ -1,0 +1,53 @@
+{
+  "nav": {
+    "findTechnician": "Wá Oníṣẹ́-ọwọ́",
+    "dashboard": "Pátákó Ìdarí",
+    "admin": "Alábòójútó",
+    "login": "Wọlé",
+    "signup": "Forúkọsílẹ̀",
+    "logout": "Jáde",
+    "hi": "Bawo, {{name}}"
+  },
+  "footer": {
+    "tagline": "TechieFinder — ń so àwọn ará Nàìjíríà pọ̀ mọ́ àwọn oníṣẹ́-ọwọ́ tó mọṣẹ́ ní àdúgbò wọn."
+  },
+  "home": {
+    "heroTitle": "Wá àwọn oníṣẹ́-ọwọ́ tó mọṣẹ́ nítòsí rẹ",
+    "heroSubtitle": "Àwọn atọ́ka omi, oṣiṣẹ́ iná mọ̀nàmọ́ná, ẹlẹ́rọ̀ ọkọ̀, àti bẹ́ẹ̀ bẹ́ẹ̀ lọ — tí a fọwọ́ sí tí àwọn oníbàárà gidi sì ti dárate wọn ní gbogbo Nàìjíríà.",
+    "heroCta": "Wá oníṣẹ́-ọwọ́",
+    "browseByCategory": "Wo gẹ́gẹ́ bí ẹ̀ka",
+    "featuredTechnicians": "Àwọn tá a dábàá fún ọ",
+    "loading": "Ń kó...",
+    "noTechnicians": "Kò sí oníṣẹ́-ọwọ́ kankan síbẹ̀.",
+    "defaultBio": "Oníṣẹ́-ọwọ́ Aládàáṣiṣẹ́",
+    "verified": "Ti Fọwọ́ Sí"
+  },
+  "login": {
+    "title": "Káàbọ̀ padà",
+    "subtitle": "Wọlé láti wo iṣẹ́ àti láti darí àwọn iṣẹ́ rẹ.",
+    "email": "Ímeèlì",
+    "password": "Ọ̀rọ̀ìgbaniwọlé",
+    "submit": "Wọlé",
+    "submitting": "Ń wọlé...",
+    "noAccount": "Ò ò ní àkántì?",
+    "signUp": "Forúkọsílẹ̀"
+  },
+  "register": {
+    "title": "Ṣẹ̀dá àkántì rẹ",
+    "subtitle": "Dara pọ̀ mọ́ TechieFinder láti wá tàbí pèsè iṣẹ́ àdúgbò.",
+    "firstName": "Orúkọ àkọ́kọ́",
+    "lastName": "Orúkọ ìdílé",
+    "email": "Ímeèlì",
+    "phoneNumber": "Nọ́mbà fóònù",
+    "password": "Ọ̀rọ̀ìgbaniwọlé",
+    "roleUser": "Mo nílò oníṣẹ́-ọwọ́",
+    "roleTechnician": "Èmi ni oníṣẹ́-ọwọ́",
+    "submit": "Ṣẹ̀dá àkántì",
+    "submitting": "Ń ṣẹ̀dá àkántì...",
+    "haveAccount": "Ṣé o ti ní àkántì?",
+    "logIn": "Wọlé"
+  },
+  "language": {
+    "label": "Èdè"
+  }
+}

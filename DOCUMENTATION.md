@@ -107,9 +107,9 @@ backend/src/main/java/com/techiefinder/
 ### Core Dependencies (`pom.xml`)
 
 Spring Boot 3.1.5 starters: `web`, `data-jpa`, `security`, `validation`,
-`actuator`. Plus: `h2` (dev, runtime), `mysql-connector-j` (prod, runtime),
-`jjwt-api`/`jjwt-impl`/`jjwt-jackson` 0.11.5, `lombok`, `spring-boot-starter-test`
-+ `spring-security-test` (test scope).
+`actuator`, `mail`. Plus: `h2` (dev, runtime), `mysql-connector-j` (prod, runtime),
+`jjwt-api`/`jjwt-impl`/`jjwt-jackson` 0.11.5, `firebase-admin` (push), `lombok`,
+`spring-boot-starter-test` + `spring-security-test` (test scope).
 
 ### Configuration
 
@@ -123,7 +123,14 @@ spring.datasource.url=jdbc:h2:mem:techiefinder
 spring.jpa.hibernate.ddl-auto=create-drop
 jwt.secret=${JWT_SECRET:<74-byte dev-only default>}
 cors.allowed.origins=${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:8080}
+admin.default.email=${ADMIN_EMAIL:admin@techiefinder.com}
+admin.default.password=${ADMIN_PASSWORD:ChangeMe123!}
+payment.gateway.provider=${PAYMENT_GATEWAY_PROVIDER:wallet}
+payment.gateway.callback.url=${PAYMENT_CALLBACK_URL:http://localhost:3000/payments/callback}
 ```
+See the README's "Configurable, requires your own credentials" section for
+the payment/Firebase/email/SMS variables — all default to a safe no-op/
+simulation without real credentials.
 
 **`application-prod.properties`** (`SPRING_PROFILES_ACTIVE=prod`):
 ```properties
@@ -142,28 +149,32 @@ a short secret throws `WeakKeyException` at the first login/register call.
 ## Web App Documentation
 
 ### Technology Stack
-React 19, Vite, TypeScript, Tailwind CSS 4, React Router 7, axios.
+React 19, Vite, TypeScript, Tailwind CSS 4, React Router 7, axios, i18next/
+react-i18next, Vitest + Testing Library.
 
 ### Project Structure
 ```
 web/src/
 ├── pages/            # Home, Login, Register, Search, TechnicianProfile,
 │                       Dashboard, UserDashboard, TechnicianDashboard,
-│                       Conversation, NotFound
-├── components/       # Layout (nav + outlet), ProtectedRoute
+│                       AdminDashboard, PaymentCallback, Conversation, NotFound
+├── components/       # Layout (nav + outlet + language switcher), ProtectedRoute (role-gated)
 ├── contexts/          # AuthContext (JWT in localStorage)
+├── i18n/              # i18next init + locales/{en,yo,ig,ha}.json
 └── lib/api.ts         # axios instance, bearer-token interceptor, 401 handler
 ```
 
 ### Key Behavior
-- Dev server (`npm run dev`, port 3000) proxies `/api/*` to `localhost:8080`
-  via `vite.config.ts` — no CORS issues in local dev
+- Dev server (`npm run dev`, port 3000) proxies `/api/*` and `/uploads/*` to
+  `localhost:8080` via `vite.config.ts` — no CORS issues in local dev
 - A built bundle can point at a different backend host via `VITE_API_URL`
-- Category search and "Near Me" geo-radius search both call the same
-  `GET /technicians/available` / `GET /technicians/nearby` endpoints the
-  mobile app uses
+- Category, "Near Me" geo-radius, and "Recommended for you" search all call
+  the same `/technicians/available` / `/technicians/nearby` /
+  `/technicians/recommended` endpoints the mobile app uses
 - Same `AuthContext`/`api.ts` shape as the mobile app, deliberately, so the
   two clients' behavior stays in sync as the API evolves
+- Language preference persists in `localStorage` (`techiefinder.language`)
+  via `i18next-browser-languagedetector`
 
 ---
 
@@ -173,9 +184,13 @@ web/src/
 Expo-managed React Native app (Expo 54, React Native 0.81, React 19).
 
 ### Key Features
-Login/Register, Home (categories + featured technicians), Search (category +
+Login/Register (login screen has a working en/yo/ig/ha language switcher via
+i18next), Home (categories + recommended technicians), Search (category +
 device-location "Near Me" via `expo-location`), Technician Profile (ratings,
-service offerings, booking form, messaging), role-routed dashboards, Chat.
+service offerings, portfolio photos, verified certifications, booking form,
+messaging), role-routed dashboards, Chat. Booking payment redirects to a real
+gateway checkout (`expo-web-browser`) when one is configured, otherwise
+settles instantly against the wallet simulation.
 
 ### Development Setup
 ```bash
@@ -225,6 +240,15 @@ is recommended; `update` with no migration history has no rollback path.
   is a real bug class this codebase hit once already (see git history).
 - No DTO-less entity exposure: every controller returns a mapped DTO, never
   the entity directly, so fields like `User.password` never serialize.
+- `equals()`/`hashCode()` are identity-based (`id` only, defined once in
+  `BaseEntity`), not Lombok's field-by-field `@Data` default. Several entities
+  have bidirectional relations (e.g. `User` ↔ `UserProfile`); a naive
+  field-by-field `hashCode()` recurses through them infinitely the moment
+  Hibernate needs to put one in a `HashSet` (a lazily-loaded `@OneToMany`
+  collection is backed by one) — this is a real `StackOverflowError` this
+  codebase hit once already, surfaced by the technician recommendation
+  endpoint being the first code path to touch `Technician.getServices()`
+  outside a narrow existing path.
 
 ---
 
@@ -327,6 +351,7 @@ GET /api/public/categories       → [{ id, name, slug, description, iconUrl }]
 ```
 GET  /api/technicians/available?category=<slug>       (category optional)
 GET  /api/technicians/nearby?latitude=&longitude=&radiusKm=
+GET  /api/technicians/recommended?latitude=&longitude=&limit=10   (auth optional; see below)
 GET  /api/technicians/{id}
 GET  /api/technicians/{id}/services
 GET  /api/technicians/me                                (auth: TECHNICIAN)
@@ -334,7 +359,22 @@ POST /api/technicians/create/{userId}                   (auth: TECHNICIAN|ADMIN)
 PUT  /api/technicians/me/location                       (auth: TECHNICIAN)
 POST /api/technicians/me/services                       (auth: TECHNICIAN)
 GET  /api/technicians/me/services                       (auth: TECHNICIAN)
+
+GET    /api/technicians/{id}/portfolio                  → [TechnicianPortfolioDto]
+POST   /api/technicians/me/portfolio (multipart: image, title, description?, categorySlug?)
+                                                          (auth: TECHNICIAN)
+DELETE /api/technicians/me/portfolio/{itemId}           (auth: TECHNICIAN, ownership-checked)
+
+GET    /api/technicians/{id}/certifications             → [TechnicianCertificationDto]
+POST   /api/technicians/me/certifications (multipart: name, issuingOrganization,
+        credentialId?, issueDate?, expiryDate?, certificateFile?)   (auth: TECHNICIAN)
+DELETE /api/technicians/me/certifications/{certificationId}   (auth: TECHNICIAN, ownership-checked)
 ```
+`/recommended` ranks available technicians by a transparent weighted score
+(`matchScore` on the response) — rating, completion rate, proximity (if
+lat/lon given), category match with the caller's past bookings (if
+authenticated), and verification status. It is not a call to an external
+ML/LLM API. Works for guests; personalizes further when authenticated.
 
 ### Bookings
 ```
@@ -355,8 +395,18 @@ assigned technician; either party can `CANCEL`.
 
 ### Payments
 ```
-POST /api/payments/bookings/{bookingId}/pay   # settles against a simulated wallet
+POST /api/payments/bookings/{bookingId}/pay
+# Settles instantly against a simulated wallet by default. If
+# payment.gateway.provider (PAYMENT_GATEWAY_PROVIDER) names a real gateway
+# AND its secret key is a real (non-placeholder) value, this instead
+# initializes a real Paystack/Flutterwave transaction and returns
+# { requiresRedirect: true, authorizationUrl, transactionReference } for the
+# client to redirect to.
+
 GET  /api/payments/my
+GET  /api/payments/verify/{reference}          (auth) # finalizes a pending gateway payment
+POST /api/payments/webhook/paystack            (public; verified via x-paystack-signature)
+POST /api/payments/webhook/flutterwave         (public; verified via verif-hash)
 ```
 
 ### Ratings
@@ -400,6 +450,10 @@ PATCH  /api/admin/technicians/{id}/verification
 GET    /api/admin/bookings                      → [BookingDto]
 GET    /api/admin/ratings                       → [RatingDto]
 DELETE /api/admin/ratings/{id}                   # removes a review, recalculates the technician's rating
+
+GET    /api/admin/certifications                → [TechnicianCertificationDto]
+PATCH  /api/admin/certifications/{id}/verification
+{ "status": "PENDING" | "VERIFIED" | "REJECTED" }
 ```
 A default admin (`admin@techiefinder.com` / `ChangeMe123!` in dev, override
 via `ADMIN_EMAIL`/`ADMIN_PASSWORD`) is seeded on first startup by
@@ -423,7 +477,7 @@ leaked to clients).
 ## Testing Strategy
 
 ### Backend
-`mvn test` runs 4 classes / 17 tests:
+`mvn test` runs 12 classes / 35 tests:
 - `TechieFinderApplicationTests` — Spring context loads
 - `AuthControllerTest` (MockMvc) — register success/validation/duplicate-email,
   wrong-password login, unauthenticated access to a protected endpoint, guest
@@ -436,36 +490,71 @@ leaked to clients).
 - `BookingFlowIntegrationTest` (MockMvc, full context) — the entire booking
   lifecycle from the API Reference section above, plus negative cases
   (wrong-role status update, double-pay, double-rate)
+- `PaymentGatewayTest` / `PaymentGatewayFallbackTest` (MockMvc +
+  `MockRestServiceServer`) — real Paystack checkout/verify/webhook flow against
+  a faked (non-placeholder) secret key, and confirms the wallet-simulation
+  fallback when the configured provider's key is still a placeholder
+- `TechnicianPortfolioAndCertificationTest` (MockMvc, multipart) — photo/cert
+  upload, ownership-checked deletion, unsupported file type rejection, admin
+  certification verification
+- `TechnicianRecommendationTest` (MockMvc) — guest read access, higher-rated
+  technicians rank first, proximity affects the score when coordinates are given
+- `DeliveryClientsDefaultConfigTest` / `EmailClientTest` / `SmsClientTest` /
+  `NotificationServiceDeliveryTest` — push/email/SMS clients report
+  unconfigured and no-op safely by default; flip to "configured" and actually
+  attempt a send once real (non-placeholder) credentials are supplied, verified
+  against a mocked `JavaMailSender` / `MockRestServiceServer` respectively
+
+Several of these tests configure a distinct Spring context (`@TestPropertySource`
+overriding provider/credential properties), which is why each of those also
+overrides `spring.datasource.url` to a random per-context H2 database name —
+the base config points every context at the same *named* in-memory H2 database
+(shared JVM-wide by design), so multiple differently-configured contexts would
+otherwise race to create/drop the same schema.
 
 ### Mobile
-`npm test` runs 2 suites / 7 tests (Jest + `@testing-library/react-native`):
-`AuthContext` (session persistence, login/logout, error surfacing) and
-`LoginScreen` (validation, submit, error handling).
+`npm test` runs 3 suites / 10 tests (Jest + `@testing-library/react-native`):
+`AuthContext` (session persistence, login/logout, error surfacing), `LoginScreen`
+(validation, submit, error handling, i18n strings), and `RegisterScreen`
+(validation including password-mismatch, submit).
 
 ### Web
-No unit tests yet. CI (`.github/workflows/ci.yml`) runs a full production
-build (`tsc -b && vite build`) on every push, which catches type errors and
-build breakage. The golden path was verified manually with a Playwright
-script during development, driving two concurrent browser sessions (customer
-+ technician) through registration, technician setup, search, booking,
-payment, completion, rating, messaging, and notifications against the live
-backend.
+`npm test` runs 4 suites / 14 tests (Vitest + `@testing-library/react`):
+`apiErrorMessage` (pure function), `AuthContext` (session persistence,
+login/logout), `ProtectedRoute` (auth + role-gating redirects), `Login` page
+(submit, error display). CI (`.github/workflows/ci.yml`) runs these plus a full
+production build (`tsc -b && vite build`) on every push.
+
+The golden path plus every feature added this round was also verified with a
+Playwright script driving the live backend + web dev server end-to-end:
+registration, technician setup (location + service + portfolio photo +
+certification), recommended-technician search, booking, wallet payment,
+completion, rating, messaging, notifications, admin moderation (suspend/
+reactivate a user, verify a technician, verify a certification), guest viewing
+of portfolio/certifications, and the web language switcher.
 
 ---
 
 ## Known Limitations
 
-- **Payments** settle against a simulated wallet, not Paystack/Flutterwave —
-  `PaymentService`'s docstring flags exactly where to swap in a real gateway
-  call once API keys are available
+- **Real payment gateway / push / email / SMS need your own credentials** —
+  each is fully implemented (real Paystack/Flutterwave HTTP integration,
+  Firebase Admin SDK, JavaMailSender, Termii HTTP client) but degrades to a
+  safe no-op/simulation without real (non-placeholder) credentials configured.
+  This is a deployment step, not a missing feature — see the README's
+  "Configurable, requires your own credentials" section
 - **Admin dashboard moderation is basic** — reviews can only be removed
   outright (no flagging/reporting workflow), and there's no audit log of
   admin actions (suspensions, verification changes, deletions)
-- **No push/SMS/email delivery** — notifications are in-app (DB-backed) only;
-  the `sentViaPush`/`sentViaEmail`/`sentViaSms` fields on `Notification` exist
-  but nothing sets them to `true` via an actual delivery channel
-- **No technician portfolio/certification upload UI** — the entities and
-  repositories exist; no controller/service/screen uses them yet
+- **Mobile portfolio/certification upload has no UI yet** — the backend
+  endpoints work (verified via the same tests/Playwright run as the web UI);
+  only the web technician dashboard has the upload screens
+- **Mobile translation covers only the login screen** — the web app has a
+  full language switcher across Home/Login/Register; mobile's i18n
+  infrastructure is wired up but only `LoginScreen` uses it so far
+- **Recommendation ranking is heuristic, not ML** — a transparent weighted
+  score (rating, completion rate, proximity, category match, verification),
+  not a call to an external LLM/ML API (none is configured for this backend)
 - **No schema migration tool** (Flyway/Liquibase) — see
   [Database Schema](#database-schema)
 - **Docker Compose** config is validated but not run end-to-end in this

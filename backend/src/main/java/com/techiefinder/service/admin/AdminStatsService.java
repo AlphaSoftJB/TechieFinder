@@ -3,9 +3,11 @@ package com.techiefinder.service.admin;
 import com.techiefinder.dto.admin.AdminStatsDto;
 import com.techiefinder.model.booking.Booking;
 import com.techiefinder.model.technician.Technician;
+import com.techiefinder.model.technician.TechnicianCertification;
 import com.techiefinder.model.user.User;
 import com.techiefinder.repository.booking.BookingRepository;
 import com.techiefinder.repository.rating.RatingRepository;
+import com.techiefinder.repository.technician.TechnicianCertificationRepository;
 import com.techiefinder.repository.technician.TechnicianRepository;
 import com.techiefinder.repository.user.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,9 @@ public class AdminStatsService {
     @Autowired
     private RatingRepository ratingRepository;
 
+    @Autowired
+    private TechnicianCertificationRepository certificationRepository;
+
     public AdminStatsDto getStats() {
         List<User> users = userRepository.findAll();
         List<Technician> technicians = technicianRepository.findAll();
@@ -40,6 +45,9 @@ public class AdminStatsService {
         stats.setTotalTechnicians(technicians.size());
         stats.setPendingTechnicianVerifications(technicians.stream()
                 .filter(t -> t.getVerificationStatus() == Technician.VerificationStatus.PENDING)
+                .count());
+        stats.setPendingCertificationVerifications(certificationRepository.findAll().stream()
+                .filter(c -> c.getVerificationStatus() == TechnicianCertification.VerificationStatus.PENDING)
                 .count());
 
         stats.setTotalBookings(bookings.size());

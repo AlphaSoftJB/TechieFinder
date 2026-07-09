@@ -32,6 +32,23 @@ interface Offering {
   basePrice: number;
 }
 
+interface PortfolioItem {
+  id: number;
+  title: string;
+  description: string | null;
+  imageUrl: string;
+  categoryName: string | null;
+}
+
+interface Certification {
+  id: number;
+  name: string;
+  issuingOrganization: string;
+  credentialId: string | null;
+  certificateUrl: string | null;
+  verificationStatus: string;
+}
+
 const STATUS_COLORS: Record<string, string> = {
   PENDING: 'bg-amber-100 text-amber-700',
   CONFIRMED: 'bg-blue-100 text-blue-700',
@@ -44,16 +61,22 @@ const PRICING_TYPES = ['FIXED', 'HOURLY', 'NEGOTIABLE'];
 
 export default function TechnicianDashboard() {
   const { user } = useAuth();
-  const [tab, setTab] = useState<'jobs' | 'profile' | 'notifications'>('jobs');
+  const [tab, setTab] = useState<'jobs' | 'profile' | 'portfolio' | 'notifications'>('jobs');
   const [profile, setProfile] = useState<any>(null);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [offerings, setOfferings] = useState<Offering[]>([]);
+  const [portfolio, setPortfolio] = useState<PortfolioItem[]>([]);
+  const [certifications, setCertifications] = useState<Certification[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [locationForm, setLocationForm] = useState({ address: '', city: '', state: '', latitude: '', longitude: '', serviceRadiusKm: '15' });
   const [serviceForm, setServiceForm] = useState({ categorySlug: '', serviceName: '', basePrice: '', pricingType: 'FIXED' });
+  const [portfolioForm, setPortfolioForm] = useState({ title: '', description: '', categorySlug: '' });
+  const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
+  const [certForm, setCertForm] = useState({ name: '', issuingOrganization: '', credentialId: '' });
+  const [certFile, setCertFile] = useState<File | null>(null);
 
   const ensureProfile = useCallback(async () => {
     try {
@@ -82,17 +105,22 @@ export default function TechnicianDashboard() {
     try {
       const technicianProfile = await ensureProfile();
       setProfile(technicianProfile);
-      const [bookingsRes, notificationsRes, categoriesRes, offeringsRes] = await Promise.all([
+      const [bookingsRes, notificationsRes, categoriesRes, offeringsRes, portfolioRes, certificationsRes] = await Promise.all([
         api.get('/bookings/technician/my'),
         api.get('/notifications/my'),
         api.get('/public/categories'),
         api.get('/technicians/me/services'),
+        api.get(`/technicians/${technicianProfile.id}/portfolio`),
+        api.get(`/technicians/${technicianProfile.id}/certifications`),
       ]);
       setBookings(bookingsRes.data);
       setNotifications(notificationsRes.data);
       setCategories(categoriesRes.data);
       setOfferings(offeringsRes.data);
+      setPortfolio(portfolioRes.data);
+      setCertifications(certificationsRes.data);
       setServiceForm((prev) => ({ ...prev, categorySlug: prev.categorySlug || categoriesRes.data[0]?.slug || '' }));
+      setPortfolioForm((prev) => ({ ...prev, categorySlug: prev.categorySlug || categoriesRes.data[0]?.slug || '' }));
     } catch (err) {
       console.error('Error loading technician dashboard:', err);
     } finally {
@@ -158,6 +186,66 @@ export default function TechnicianDashboard() {
     }
   };
 
+  const addPortfolioItem = async () => {
+    setError('');
+    if (!portfolioFile) {
+      setError('Choose a photo to upload.');
+      return;
+    }
+    try {
+      const formData = new FormData();
+      formData.append('title', portfolioForm.title);
+      if (portfolioForm.description) formData.append('description', portfolioForm.description);
+      if (portfolioForm.categorySlug) formData.append('categorySlug', portfolioForm.categorySlug);
+      formData.append('image', portfolioFile);
+      await api.post('/technicians/me/portfolio', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setPortfolioForm({ ...portfolioForm, title: '', description: '' });
+      setPortfolioFile(null);
+      const res = await api.get(`/technicians/${profile.id}/portfolio`);
+      setPortfolio(res.data);
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Could not upload this photo.'));
+    }
+  };
+
+  const deletePortfolioItem = async (itemId: number) => {
+    setError('');
+    try {
+      await api.delete(`/technicians/me/portfolio/${itemId}`);
+      setPortfolio((prev) => prev.filter((item) => item.id !== itemId));
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Could not remove this photo.'));
+    }
+  };
+
+  const addCertification = async () => {
+    setError('');
+    try {
+      const formData = new FormData();
+      formData.append('name', certForm.name);
+      formData.append('issuingOrganization', certForm.issuingOrganization);
+      if (certForm.credentialId) formData.append('credentialId', certForm.credentialId);
+      if (certFile) formData.append('certificateFile', certFile);
+      await api.post('/technicians/me/certifications', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+      setCertForm({ name: '', issuingOrganization: '', credentialId: '' });
+      setCertFile(null);
+      const res = await api.get(`/technicians/${profile.id}/certifications`);
+      setCertifications(res.data);
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Could not add this certification.'));
+    }
+  };
+
+  const deleteCertification = async (certificationId: number) => {
+    setError('');
+    try {
+      await api.delete(`/technicians/me/certifications/${certificationId}`);
+      setCertifications((prev) => prev.filter((c) => c.id !== certificationId));
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Could not remove this certification.'));
+    }
+  };
+
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   if (loading) return <p className="p-10 text-center text-neutral-500">Loading...</p>;
@@ -172,6 +260,7 @@ export default function TechnicianDashboard() {
       <div className="mt-6 flex gap-2">
         <button onClick={() => setTab('jobs')} className={`rounded-full px-4 py-1.5 text-sm font-medium ${tab === 'jobs' ? 'bg-emerald-700 text-white' : 'bg-neutral-100 text-neutral-600'}`}>Jobs</button>
         <button onClick={() => setTab('profile')} className={`rounded-full px-4 py-1.5 text-sm font-medium ${tab === 'profile' ? 'bg-emerald-700 text-white' : 'bg-neutral-100 text-neutral-600'}`}>Profile</button>
+        <button onClick={() => setTab('portfolio')} className={`rounded-full px-4 py-1.5 text-sm font-medium ${tab === 'portfolio' ? 'bg-emerald-700 text-white' : 'bg-neutral-100 text-neutral-600'}`}>Portfolio</button>
         <button onClick={() => setTab('notifications')} className={`rounded-full px-4 py-1.5 text-sm font-medium ${tab === 'notifications' ? 'bg-emerald-700 text-white' : 'bg-neutral-100 text-neutral-600'}`}>
           Notifications{unreadCount > 0 ? ` (${unreadCount})` : ''}
         </button>
@@ -276,6 +365,87 @@ export default function TechnicianDashboard() {
                   <li key={o.id} className="flex justify-between py-2 text-sm">
                     <span>{o.serviceName} <span className="text-neutral-400">({o.categoryName})</span></span>
                     <span className="font-semibold text-emerald-700">&#8358;{Number(o.basePrice).toLocaleString()}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === 'portfolio' && (
+        <div className="mt-6 space-y-8">
+          <div>
+            <h2 className="mb-3 font-semibold text-neutral-900">Portfolio Photos</h2>
+            <div className="space-y-3 rounded-lg border border-neutral-200 bg-white p-4">
+              <input placeholder="Title (e.g. Kitchen pipe repair)" value={portfolioForm.title}
+                onChange={(e) => setPortfolioForm({ ...portfolioForm, title: e.target.value })}
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm" />
+              <textarea placeholder="Description (optional)" value={portfolioForm.description}
+                onChange={(e) => setPortfolioForm({ ...portfolioForm, description: e.target.value })}
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm" rows={2} />
+              <div className="flex flex-wrap gap-2">
+                {categories.map((c) => (
+                  <button key={c.id} onClick={() => setPortfolioForm({ ...portfolioForm, categorySlug: c.slug })}
+                    className={`rounded-full border px-3 py-1 text-sm ${portfolioForm.categorySlug === c.slug ? 'border-emerald-700 bg-emerald-700 text-white' : 'border-neutral-300 text-neutral-600'}`}>
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+              <input type="file" accept="image/*" onChange={(e) => setPortfolioFile(e.target.files?.[0] ?? null)}
+                className="w-full text-sm" />
+              <button onClick={addPortfolioItem} className="w-full rounded-md bg-emerald-700 py-2 text-sm font-semibold text-white">Upload Photo</button>
+            </div>
+
+            {portfolio.length > 0 && (
+              <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {portfolio.map((item) => (
+                  <div key={item.id} className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+                    <img src={item.imageUrl} alt={item.title} className="h-32 w-full object-cover" />
+                    <div className="p-2">
+                      <p className="truncate text-xs font-semibold text-neutral-900">{item.title}</p>
+                      <button onClick={() => deletePortfolioItem(item.id)} className="mt-1 text-xs font-medium text-red-600">Remove</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <h2 className="mb-3 font-semibold text-neutral-900">Certifications</h2>
+            <div className="space-y-3 rounded-lg border border-neutral-200 bg-white p-4">
+              <input placeholder="Certification name (e.g. Certified Plumber)" value={certForm.name}
+                onChange={(e) => setCertForm({ ...certForm, name: e.target.value })}
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm" />
+              <input placeholder="Issuing organization" value={certForm.issuingOrganization}
+                onChange={(e) => setCertForm({ ...certForm, issuingOrganization: e.target.value })}
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm" />
+              <input placeholder="Credential ID (optional)" value={certForm.credentialId}
+                onChange={(e) => setCertForm({ ...certForm, credentialId: e.target.value })}
+                className="w-full rounded-md border border-neutral-300 px-3 py-2 text-sm" />
+              <input type="file" accept="image/*,.pdf" onChange={(e) => setCertFile(e.target.files?.[0] ?? null)}
+                className="w-full text-sm" />
+              <button onClick={addCertification} className="w-full rounded-md bg-emerald-700 py-2 text-sm font-semibold text-white">Add Certification</button>
+            </div>
+
+            {certifications.length > 0 && (
+              <ul className="mt-3 divide-y divide-neutral-100 rounded-lg border border-neutral-200 bg-white px-4">
+                {certifications.map((c) => (
+                  <li key={c.id} className="flex items-center justify-between py-2 text-sm">
+                    <span>
+                      {c.name} <span className="text-neutral-400">({c.issuingOrganization})</span>
+                    </span>
+                    <span className="flex items-center gap-2">
+                      <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${
+                        c.verificationStatus === 'VERIFIED' ? 'bg-emerald-100 text-emerald-700'
+                          : c.verificationStatus === 'REJECTED' ? 'bg-red-100 text-red-700'
+                          : 'bg-amber-100 text-amber-700'
+                      }`}>
+                        {c.verificationStatus}
+                      </span>
+                      <button onClick={() => deleteCertification(c.id)} className="text-xs font-medium text-red-600">Remove</button>
+                    </span>
                   </li>
                 ))}
               </ul>
