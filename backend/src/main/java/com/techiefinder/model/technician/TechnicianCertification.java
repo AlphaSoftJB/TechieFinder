@@ -35,6 +35,7 @@ public class TechnicianCertification extends BaseEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
 
     public enum VerificationStatus {

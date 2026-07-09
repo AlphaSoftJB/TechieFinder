@@ -31,5 +31,6 @@ public class TechnicianAvailability extends BaseEntity {
     private LocalTime endTime;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean available = true;
 }

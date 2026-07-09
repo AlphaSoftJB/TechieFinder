@@ -31,6 +31,7 @@ public class Booking extends BaseEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private BookingStatus status = BookingStatus.PENDING;
 
     @Column(nullable = false)
@@ -67,6 +68,7 @@ public class Booking extends BaseEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private PaymentStatus paymentStatus = PaymentStatus.PENDING;
 
     private String cancellationReason;

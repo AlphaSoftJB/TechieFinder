@@ -34,6 +34,7 @@ public class UserPaymentMethod extends BaseEntity {
     private String mobileMoneyNumber;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isDefault = false;
 
     // Payment gateway authorization code (for recurring payments)

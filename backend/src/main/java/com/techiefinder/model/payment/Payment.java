@@ -38,6 +38,7 @@ public class Payment extends BaseEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private PaymentStatus status = PaymentStatus.PENDING;
 
     @Column(nullable = false)

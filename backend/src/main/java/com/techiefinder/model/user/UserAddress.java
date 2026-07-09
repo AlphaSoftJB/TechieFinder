@@ -34,11 +34,13 @@ public class UserAddress extends BaseEntity {
     private String postalCode;
 
     @Column(nullable = false)
+    @Builder.Default
     private String country = "Nigeria";
 
     private Double latitude;
     private Double longitude;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean isDefault = false;
 }

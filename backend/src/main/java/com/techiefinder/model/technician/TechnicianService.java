@@ -39,6 +39,7 @@ public class TechnicianService extends BaseEntity {
     private Integer estimatedDurationMinutes;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean available = true;
 
     public enum PricingType {

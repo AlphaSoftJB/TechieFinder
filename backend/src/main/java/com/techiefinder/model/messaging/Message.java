@@ -29,11 +29,13 @@ public class Message extends BaseEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private MessageType type = MessageType.TEXT;
 
     private String attachmentUrl;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean read = false;
 
     private LocalDateTime readAt;

@@ -33,13 +33,16 @@ public class Conversation extends BaseEntity {
     private Booking booking;
 
     @OneToMany(mappedBy = "conversation", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<Message> messages = new HashSet<>();
 
     private LocalDateTime lastMessageAt;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer unreadCountUser = 0;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer unreadCountTechnician = 0;
 }

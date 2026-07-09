@@ -27,6 +27,7 @@ public class TechnicianLocation extends BaseEntity {
     private String state;
 
     @Column(nullable = false)
+    @Builder.Default
     private String country = "Nigeria";
 
     @Column(nullable = false)
@@ -36,6 +37,7 @@ public class TechnicianLocation extends BaseEntity {
     private Double longitude;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer serviceRadiusKm = 10; // Default service radius in kilometers
 
     private String landmark;

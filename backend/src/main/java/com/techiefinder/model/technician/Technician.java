@@ -27,27 +27,35 @@ public class Technician extends BaseEntity {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private VerificationStatus verificationStatus = VerificationStatus.PENDING;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean available = true;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean acceptingJobs = true;
 
     @Column(precision = 3, scale = 2)
+    @Builder.Default
     private BigDecimal rating = BigDecimal.ZERO;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer totalRatings = 0;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer completedJobs = 0;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer cancelledJobs = 0;
 
     @Column(nullable = false)
+    @Builder.Default
     private BigDecimal walletBalance = BigDecimal.ZERO;
 
     private String businessName;
@@ -59,18 +67,22 @@ public class Technician extends BaseEntity {
     private Integer yearsOfExperience;
 
     @OneToMany(mappedBy = "technician", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<TechnicianService> services = new HashSet<>();
 
     @OneToMany(mappedBy = "technician", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<TechnicianAvailability> availability = new HashSet<>();
 
     @OneToOne(mappedBy = "technician", cascade = CascadeType.ALL, orphanRemoval = true)
     private TechnicianLocation location;
 
     @OneToMany(mappedBy = "technician", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<TechnicianPortfolio> portfolio = new HashSet<>();
 
     @OneToMany(mappedBy = "technician", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<TechnicianCertification> certifications = new HashSet<>();
 
     public enum VerificationStatus {

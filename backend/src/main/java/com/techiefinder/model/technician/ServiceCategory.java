@@ -25,5 +25,6 @@ public class ServiceCategory extends BaseEntity {
     private String iconUrl;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer displayOrder = 0;
 }

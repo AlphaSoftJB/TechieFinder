@@ -36,9 +36,11 @@ public class User extends BaseEntity {
     private UserRole role;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean emailVerified = false;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean phoneVerified = false;
 
     private String profileImageUrl;
@@ -49,9 +51,11 @@ public class User extends BaseEntity {
     private UserProfile profile;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<UserAddress> addresses = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private Set<UserPaymentMethod> paymentMethods = new HashSet<>();
 
     public enum UserRole {

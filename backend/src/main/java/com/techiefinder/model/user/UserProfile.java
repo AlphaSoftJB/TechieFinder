@@ -32,15 +32,19 @@ public class UserProfile extends BaseEntity {
     private String country;
 
     @Column(nullable = false)
+    @Builder.Default
     private String preferredLanguage = "en";
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean notificationsEnabled = true;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean smsNotificationsEnabled = true;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean emailNotificationsEnabled = true;
 
     public enum Gender {

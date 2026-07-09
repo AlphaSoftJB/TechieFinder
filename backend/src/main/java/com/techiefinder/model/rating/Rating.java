@@ -43,5 +43,6 @@ public class Rating extends BaseEntity {
     private String technicianResponse;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean verified = true; // Verified booking-based review
 }

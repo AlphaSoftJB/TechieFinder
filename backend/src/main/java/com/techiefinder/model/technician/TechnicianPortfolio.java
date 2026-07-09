@@ -33,5 +33,6 @@ public class TechnicianPortfolio extends BaseEntity {
     private ServiceCategory category;
 
     @Column(nullable = false)
+    @Builder.Default
     private Integer displayOrder = 0;
 }

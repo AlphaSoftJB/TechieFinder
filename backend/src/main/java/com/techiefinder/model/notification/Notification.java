@@ -34,6 +34,7 @@ public class Notification extends BaseEntity {
     private String data; // JSON data for additional information
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean read = false;
 
     private LocalDateTime readAt;
@@ -41,12 +42,15 @@ public class Notification extends BaseEntity {
     private String actionUrl; // Deep link or URL for action
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean sentViaPush = false;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean sentViaEmail = false;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean sentViaSms = false;
 
     public enum NotificationType {
