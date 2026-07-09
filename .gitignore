@@ -8,6 +8,9 @@ mobile/.expo/
 mobile/dist/
 mobile/web-build/
 
+# Environment secrets
+.env
+
 # IDE
 .idea/
 *.iml

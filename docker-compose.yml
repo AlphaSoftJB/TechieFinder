@@ -1,0 +1,35 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: techiefinder
+      MYSQL_ROOT_PASSWORD: ${DATABASE_PASSWORD:-password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot", "-ppassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_URL: jdbc:mysql://mysql:3306/techiefinder
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-password}
+      JWT_SECRET: ${JWT_SECRET:-TechieFinderDevOnlySecretKeyForJWTHS512SigningRequiresAtLeast64ByteLongKey}
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
