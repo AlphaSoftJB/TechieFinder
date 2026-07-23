@@ -15,9 +15,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { SUPPORTED_LANGUAGES } from '../i18n';
+import GoogleSignInButton from '../components/GoogleSignInButton';
+import AppleSignInButton from '../components/AppleSignInButton';
+import BiometricUnlockButton from '../components/BiometricUnlockButton';
+import { useBiometricOptIn } from '../hooks/useBiometricOptIn';
+import { refreshStoredToken } from '../lib/biometricAuth';
 
 export default function LoginScreen({ navigation }: any) {
-  const { login } = useAuth();
+  const { login, loginWithGoogle, loginWithApple, unlockWithRefreshToken } = useAuth();
+  const { offerBiometricOptIn } = useBiometricOptIn();
   const { t, i18n } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -59,8 +65,9 @@ export default function LoginScreen({ navigation }: any) {
 
     setLoading(true);
     try {
-      await login(email, password);
+      const auth = await login(email, password);
       // Navigation is handled automatically by AuthContext
+      offerBiometricOptIn(auth.refreshToken);
     } catch (error: any) {
       Alert.alert(
         t('login.failedTitle'),
@@ -69,6 +76,39 @@ export default function LoginScreen({ navigation }: any) {
       );
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSocialError = (message: string) => {
+    Alert.alert(t('login.failedTitle'), message, [{ text: 'OK' }]);
+  };
+
+  const handleGoogleToken = async (idToken: string) => {
+    try {
+      const auth = await loginWithGoogle(idToken);
+      offerBiometricOptIn(auth.refreshToken);
+    } catch (error: any) {
+      handleSocialError(error.message || t('login.failedDefault'));
+    }
+  };
+
+  const handleAppleToken = async (idToken: string, firstName?: string, lastName?: string) => {
+    try {
+      const auth = await loginWithApple(idToken, firstName, lastName);
+      offerBiometricOptIn(auth.refreshToken);
+    } catch (error: any) {
+      handleSocialError(error.message || t('login.failedDefault'));
+    }
+  };
+
+  const handleBiometricUnlock = async (refreshToken: string) => {
+    try {
+      const auth = await unlockWithRefreshToken(refreshToken);
+      // Quietly rotate the stored secret so quick unlock keeps working next
+      // time instead of expiring after a single use.
+      await refreshStoredToken(auth.refreshToken);
+    } catch (error: any) {
+      Alert.alert(t('login.failedTitle'), error.message || t('login.failedDefault'), [{ text: 'OK' }]);
     }
   };
 
@@ -89,6 +129,10 @@ export default function LoginScreen({ navigation }: any) {
           <Text style={styles.title}>{t('login.title')}</Text>
           <Text style={styles.subtitle}>{t('login.subtitle')}</Text>
         </View>
+
+        {/* Quick unlock -- hidden entirely unless the user previously
+            enabled it and this device has biometric hardware enrolled */}
+        <BiometricUnlockButton onUnlock={handleBiometricUnlock} />
 
         {/* Language switcher */}
         <View style={styles.languageRow}>
@@ -184,6 +228,13 @@ export default function LoginScreen({ navigation }: any) {
             <View style={styles.dividerLine} />
             <Text style={styles.dividerText}>{t('login.or')}</Text>
             <View style={styles.dividerLine} />
+          </View>
+
+          {/* Social sign-in -- hidden entirely unless a client id is
+              configured for this platform (see .env.example) */}
+          <View style={styles.socialButtons}>
+            <GoogleSignInButton onToken={handleGoogleToken} onError={handleSocialError} />
+            <AppleSignInButton onToken={handleAppleToken} onError={handleSocialError} />
           </View>
 
           {/* Register Link */}
@@ -347,6 +398,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     fontSize: 14,
     color: '#666',
+  },
+  socialButtons: {
+    gap: 12,
+    marginBottom: 24,
   },
   registerContainer: {
     flexDirection: 'row',

@@ -30,7 +30,9 @@
     "submit": "Log in",
     "submitting": "Logging in...",
     "noAccount": "Don't have an account?",
-    "signUp": "Sign up"
+    "signUp": "Sign up",
+    "or": "or",
+    "continueWithApple": "Continue with Apple"
   },
   "register": {
     "title": "Create your account",

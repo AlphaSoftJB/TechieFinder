@@ -30,7 +30,9 @@
     "submit": "Shiga",
     "submitting": "Ana shigarwa...",
     "noAccount": "Ba ka da asusu?",
-    "signUp": "Yi rijista"
+    "signUp": "Yi rijista",
+    "or": "ko",
+    "continueWithApple": "Ci gaba da Apple"
   },
   "register": {
     "title": "Ƙirƙiri asusunka",

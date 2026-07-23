@@ -16,7 +16,9 @@
     "passwordRequired": "Ana bukatar kalmar sirri",
     "passwordTooShort": "Kalmar sirri dole ta kasance akalla haruffa shida",
     "failedTitle": "Shiga Ya Kasa",
-    "failedDefault": "Imel ko kalmar sirri ba daidai ba. Da fatan za a sake gwadawa."
+    "failedDefault": "Imel ko kalmar sirri ba daidai ba. Da fatan za a sake gwadawa.",
+    "continueWithGoogle": "Ci gaba da Google",
+    "googleSignInFailed": "Shiga ta Google ya kasa. Da fatan za a sake gwadawa."
   },
   "language": {
     "label": "Harshe"

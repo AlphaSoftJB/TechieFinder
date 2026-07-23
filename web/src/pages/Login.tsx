@@ -2,15 +2,20 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
+import GoogleSignInButton from '../components/GoogleSignInButton';
+import AppleSignInButton from '../components/AppleSignInButton';
+import { appleClientId, googleClientId } from '../lib/socialAuth';
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, loginWithGoogle, loginWithApple } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const hasSocialSignIn = !!googleClientId() || !!appleClientId();
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -23,6 +28,26 @@ export default function Login() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleToken = async (idToken: string) => {
+    setError('');
+    try {
+      await loginWithGoogle(idToken);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleAppleToken = async (idToken: string, firstName?: string, lastName?: string) => {
+    setError('');
+    try {
+      await loginWithApple(idToken, firstName, lastName);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
@@ -65,6 +90,20 @@ export default function Login() {
         >
           {loading ? t('login.submitting') : t('login.submit')}
         </button>
+
+        {hasSocialSignIn && (
+          <>
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-neutral-200" />
+              <span className="text-xs text-neutral-400">{t('login.or')}</span>
+              <div className="h-px flex-1 bg-neutral-200" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <GoogleSignInButton onToken={handleGoogleToken} onError={setError} />
+              <AppleSignInButton onToken={handleAppleToken} onError={setError} />
+            </div>
+          </>
+        )}
       </form>
 
       <p className="text-center text-sm text-neutral-500">

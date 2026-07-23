@@ -19,7 +19,8 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    // Nullable: accounts created via Google/Apple sign-in have no password --
+    // they authenticate entirely through the provider's ID token.
     private String password;
 
     @Column(nullable = false)
@@ -47,6 +48,15 @@ public class User extends BaseEntity {
 
     private String fcmToken; // Firebase Cloud Messaging token for push notifications
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
+    // The provider's stable subject/user id (Google's "sub", Apple's "sub").
+    // Null for LOCAL accounts.
+    private String providerId;
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private UserProfile profile;
 
@@ -62,5 +72,11 @@ public class User extends BaseEntity {
         USER,
         TECHNICIAN,
         ADMIN
+    }
+
+    public enum AuthProvider {
+        LOCAL,
+        GOOGLE,
+        APPLE
     }
 }

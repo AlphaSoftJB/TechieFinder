@@ -52,6 +52,13 @@
             <artifactId>firebase-admin</artifactId>
             <version>9.3.0</version>
         </dependency>
+        <dependency>
+            <!-- Fetches and caches JWKS public keys, used to verify Google/Apple
+                 Sign-In ID tokens without depending on either provider's full SDK. -->
+            <groupId>com.auth0</groupId>
+            <artifactId>jwks-rsa</artifactId>
+            <version>0.22.1</version>
+        </dependency>
 
         <dependency>
             <groupId>com.h2database</groupId>

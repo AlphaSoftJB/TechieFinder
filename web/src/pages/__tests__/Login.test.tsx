@@ -5,10 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import Login from '../Login';
 
 const mockLogin = vi.fn();
+const mockLoginWithGoogle = vi.fn();
+const mockLoginWithApple = vi.fn();
 const mockNavigate = vi.fn();
 
 vi.mock('../../contexts/AuthContext', () => ({
-  useAuth: () => ({ login: mockLogin }),
+  useAuth: () => ({ login: mockLogin, loginWithGoogle: mockLoginWithGoogle, loginWithApple: mockLoginWithApple }),
 }));
 
 vi.mock('react-router-dom', async () => {
@@ -56,5 +58,16 @@ describe('Login page', () => {
 
     expect(await screen.findByText('Invalid email or password. Please try again.')).toBeInTheDocument();
     expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it('hides Google/Apple sign-in entirely when no client id is configured', () => {
+    render(
+      <MemoryRouter>
+        <Login />
+      </MemoryRouter>
+    );
+
+    expect(screen.queryByTestId('google-signin-button')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('apple-signin-button')).not.toBeInTheDocument();
   });
 });

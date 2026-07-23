@@ -3,6 +3,7 @@
     "name": "TechieFinder",
     "slug": "techiefinder",
     "version": "1.0.0",
+    "scheme": "techiefinder",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -15,6 +16,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.techiefinder.app",
+      "usesAppleSignIn": true,
       "infoPlist": {
         "NSCameraUsageDescription": "TechieFinder needs access to your camera to upload portfolio photos.",
         "NSPhotoLibraryUsageDescription": "TechieFinder needs access to your photos to upload portfolio images.",
@@ -42,6 +44,13 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "TechieFinder needs your location to find technicians near you and to let technicians set their service area."
+        }
+      ],
+      "expo-apple-authentication",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "TechieFinder uses Face ID to let you unlock the app quickly instead of typing your password."
         }
       ]
     ],

@@ -16,7 +16,9 @@
     "passwordRequired": "Password is required",
     "passwordTooShort": "Password must be at least 6 characters",
     "failedTitle": "Login Failed",
-    "failedDefault": "Invalid email or password. Please try again."
+    "failedDefault": "Invalid email or password. Please try again.",
+    "continueWithGoogle": "Continue with Google",
+    "googleSignInFailed": "Google sign-in failed. Please try again."
   },
   "language": {
     "label": "Language"

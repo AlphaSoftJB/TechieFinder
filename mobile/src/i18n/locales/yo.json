@@ -16,7 +16,9 @@
     "passwordRequired": "Ọ̀rọ̀ìgbaniwọlé gbọ́dọ̀ wà",
     "passwordTooShort": "Ọ̀rọ̀ìgbaniwọlé gbọ́dọ̀ ní ó kéré tán lẹ́tà mẹ́fà",
     "failedTitle": "Wíwọlé Kùnà",
-    "failedDefault": "Ímeèlì tàbí ọ̀rọ̀ìgbaniwọlé kò tọ́. Jọ̀wọ́ tún gbìyànjú."
+    "failedDefault": "Ímeèlì tàbí ọ̀rọ̀ìgbaniwọlé kò tọ́. Jọ̀wọ́ tún gbìyànjú.",
+    "continueWithGoogle": "Tẹ̀síwájú pẹ̀lú Google",
+    "googleSignInFailed": "Ìwọlé Google kùnà. Jọ̀wọ́ gbìyànjú lẹ́ẹ̀kansí."
   },
   "language": {
     "label": "Èdè"

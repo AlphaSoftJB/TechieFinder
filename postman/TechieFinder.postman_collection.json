@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "7bd47553-a98e-4fbc-8905-222dedc2c665",
+    "_postman_id": "bb71c8a4-ae96-4ab7-af80-0e599581bd67",
     "name": "TechieFinder API",
     "description": "TechieFinder connects Nigerian users with local technicians. This collection covers every backend endpoint (see DOCUMENTATION.md's 'API Reference' section for the prose version).\n\n## Quick start\n1. Run the backend locally (`cd backend && mvn spring-boot:run`) -- default `baseUrl` points at `http://localhost:8080/api`.\n2. Run **Auth > Register - Customer**, then **Auth > Register - Technician** -- these save tokens/ids into collection variables automatically via each request's Tests script.\n3. Run **Technicians > Create Technician Profile**, then set up a service offering + location, then walk through **Bookings**, **Payments**, **Ratings**, **Messaging** in order.\n4. Run **Auth > Login - Seeded Admin** to get an admin token (default dev credentials: admin@techiefinder.com / ChangeMe123!, overridable via ADMIN_EMAIL/ADMIN_PASSWORD) for the **Admin** folder.\n\nRequests are ordered so running a folder top-to-bottom (Postman Runner or manually) chains correctly -- most later requests depend on variables saved by earlier ones.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -53,6 +53,7 @@
                   "if (pm.response.code === 200) {",
                   "    const json = pm.response.json();",
                   "    pm.collectionVariables.set('customerToken', json.accessToken);",
+                  "    pm.collectionVariables.set('customerRefreshToken', json.refreshToken);",
                   "    pm.collectionVariables.set('customerUserId', json.userId);",
                   "    pm.collectionVariables.set('customerEmail', json.email);",
                   "}",
@@ -214,6 +215,131 @@
               }
             }
           ]
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/refresh",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Redeems a refresh token for a new access/refresh pair without re-entering a password -- this is what the mobile app's Face ID/Touch ID quick-unlock calls under the hood. Run 'Register - Customer' or 'Login' first to populate customerRefreshToken.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{customerRefreshToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const json = pm.response.json();",
+                  "    pm.collectionVariables.set('customerToken', json.accessToken);",
+                  "    pm.collectionVariables.set('customerRefreshToken', json.refreshToken);",
+                  "}",
+                  "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign In with Google",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/social/google",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "social",
+                "google"
+              ]
+            },
+            "description": "Verifies a real Google ID token (JWKS-checked server-side) and finds-or-creates the matching user -- can't be exercised from Postman since a real token can't be fabricated here, included for the request shape. role is only used the first time this identity signs up; returns 400 if GOOGLE_OAUTH_CLIENT_ID isn't configured server-side.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"<a real Google-issued ID token>\",\n  \"role\": \"USER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Sign In with Apple",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/social/apple",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "social",
+                "apple"
+              ]
+            },
+            "description": "Verifies a real Apple ID token and finds-or-creates the matching user -- can't be exercised from Postman since a real token can't be fabricated here, included for the request shape. firstName/lastName are only used the first time this identity signs up, since Apple never puts a name in the token itself; returns 400 if APPLE_OAUTH_CLIENT_ID/APPLE_OAUTH_BUNDLE_ID isn't configured server-side.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"<a real Apple-issued ID token>\",\n  \"firstName\": \"Ada\",\n  \"lastName\": \"Lovelace\",\n  \"role\": \"USER\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
         },
         {
           "name": "Auth Service Health",
@@ -2172,6 +2298,11 @@
     },
     {
       "key": "customerUserId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "customerRefreshToken",
       "value": "",
       "type": "string"
     },

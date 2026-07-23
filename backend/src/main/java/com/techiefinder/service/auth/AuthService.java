@@ -3,14 +3,18 @@ package com.techiefinder.service.auth;
 import com.techiefinder.dto.auth.AuthResponse;
 import com.techiefinder.dto.auth.LoginRequest;
 import com.techiefinder.dto.auth.RegisterRequest;
+import com.techiefinder.exception.ValidationException;
 import com.techiefinder.model.user.User;
 import com.techiefinder.model.user.UserProfile;
 import com.techiefinder.repository.user.UserRepository;
 import com.techiefinder.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,6 +86,16 @@ public class AuthService {
     }
 
     public AuthResponse login(LoginRequest request) {
+        User existing = userRepository.findByEmail(request.getEmail()).orElse(null);
+        if (existing != null && existing.getPassword() == null) {
+            // Account was created via Google/Apple sign-in and has no password
+            // to check -- fail fast with a clear message instead of letting
+            // BCrypt compare against a null hash.
+            throw new ValidationException(
+                    "This account signs in with " + existing.getAuthProvider().name()
+                            + ". Use that button instead of a password.");
+        }
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
@@ -95,6 +109,38 @@ public class AuthService {
         return AuthResponse.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .userId(user.getId())
+                .email(user.getEmail())
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
+                .role(user.getRole().name())
+                .build();
+    }
+
+    /**
+     * Redeems a refresh token for a fresh access/refresh pair, without
+     * requiring the password again. Used by the mobile app's biometric
+     * quick-unlock: the refresh token is the only thing stored on-device.
+     */
+    public AuthResponse refresh(String refreshToken) {
+        if (!tokenProvider.validateToken(refreshToken)) {
+            throw new BadCredentialsException("Invalid or expired refresh token");
+        }
+
+        String email = tokenProvider.getUsernameFromToken(refreshToken);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+
+        if (!Boolean.TRUE.equals(user.getActive())) {
+            throw new DisabledException("This account has been suspended");
+        }
+
+        String accessToken = tokenProvider.generateTokenFromUsername(user.getEmail());
+        String newRefreshToken = tokenProvider.generateRefreshToken(user.getEmail());
+
+        return AuthResponse.builder()
+                .accessToken(accessToken)
+                .refreshToken(newRefreshToken)
                 .userId(user.getId())
                 .email(user.getEmail())
                 .firstName(user.getFirstName())

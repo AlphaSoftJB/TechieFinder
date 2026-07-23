@@ -1,6 +1,6 @@
 # TechieFinder Postman Collection
 
-A complete Postman collection covering every backend endpoint (58 requests
+A complete Postman collection covering every backend endpoint (61 requests
 across 10 folders), verified request-by-request against the live backend.
 
 ## Files
@@ -42,6 +42,12 @@ execute a folder (or the whole thing) top-to-bottom in one click.
   included for reference/shape only. They're meant to be called by the
   gateway itself and are signature-verified server-side — sending them
   as-is from Postman will get a 403 unless you compute a real signature.
+- **Social sign-in requests** (`Sign In with Google`, `Sign In with Apple`)
+  are also reference/shape only — the backend verifies the ID token's real
+  signature against Google's/Apple's published JWKS, which Postman can't
+  fabricate. Sending them as-is gets a 400 (not configured) or a signature
+  error. `Refresh Token` (right above them) works normally, though, and is
+  what the mobile app's biometric quick-unlock calls under the hood.
 - **Payments** settle instantly against a wallet simulation unless
   `PAYMENT_GATEWAY_PROVIDER` names a real, configured gateway, in which case
   `Pay for Booking` instead returns `requiresRedirect: true` plus an

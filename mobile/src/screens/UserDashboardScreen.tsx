@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '../contexts/AuthContext';
 import api, { apiErrorMessage } from '../services/api';
+import BiometricUnlockToggle from '../components/BiometricUnlockToggle';
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: '#F59E0B',
@@ -153,6 +154,8 @@ export default function UserDashboardScreen() {
           <Ionicons name="log-out-outline" size={22} color="#EF4444" />
         </TouchableOpacity>
       </View>
+
+      <BiometricUnlockToggle />
 
       <View style={styles.tabs}>
         <TouchableOpacity style={[styles.tab, tab === 'bookings' && styles.tabActive]} onPress={() => setTab('bookings')}>

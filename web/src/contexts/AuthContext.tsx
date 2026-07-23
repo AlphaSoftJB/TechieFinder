@@ -34,6 +34,8 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
+  loginWithGoogle: (idToken: string, role?: UserRole) => Promise<void>;
+  loginWithApple: (idToken: string, firstName?: string, lastName?: string, role?: UserRole) => Promise<void>;
   logout: () => void;
 }
 
@@ -110,8 +112,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const loginWithGoogle = async (idToken: string, role?: UserRole) => {
+    try {
+      const response = await api.post('/auth/social/google', { idToken, role });
+      persist(toStoredAuth(response.data));
+    } catch (error) {
+      throw new Error(apiErrorMessage(error, 'Unable to sign in with Google. Please try again.'));
+    }
+  };
+
+  const loginWithApple = async (idToken: string, firstName?: string, lastName?: string, role?: UserRole) => {
+    try {
+      const response = await api.post('/auth/social/apple', { idToken, firstName, lastName, role });
+      persist(toStoredAuth(response.data));
+    } catch (error) {
+      throw new Error(apiErrorMessage(error, 'Unable to sign in with Apple. Please try again.'));
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!token, loading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{ user, isAuthenticated: !!token, loading, login, register, loginWithGoogle, loginWithApple, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

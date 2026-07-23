@@ -22,8 +22,9 @@ message → notifications fire throughout → admin can moderate all of it.
 
 **Configurable but requires your own credentials to go live** (safe no-op without them —
 see [Roadmap](#roadmap)): real Paystack/Flutterwave gateway calls (defaults to an instant
-simulated wallet settlement), and push (Firebase)/email (SMTP)/SMS (Termii) delivery
-(defaults to in-app notifications only).
+simulated wallet settlement), push (Firebase)/email (SMTP)/SMS (Termii) delivery (defaults
+to in-app notifications only), and Google/Apple sign-in (hidden entirely on both web and
+mobile until a client id is configured).
 
 ---
 
@@ -37,6 +38,11 @@ simulated wallet settlement), and push (Firebase)/email (SMTP)/SMS (Termii) deli
 - **Multi-Platform**: Web app and native mobile app (iOS & Android, via Expo)
 - **Multi-Language**: English, Yorùbá, Igbo, and Hausa (web has a full language switcher;
   mobile currently covers the login screen)
+- **Sign-in**: Email/password, or Google/Apple once a client id is configured (see
+  [Roadmap](#roadmap)) — either creates an account on first use or links to an existing
+  one with the same email
+- **Mobile quick unlock**: Face ID/Touch ID/fingerprint to reopen the app without retyping
+  a password, opt-in right after login or from the account screen
 - **Reviews & Ratings**: Rate a completed booking once; technician's average updates automatically
 - **Booking**: Request a booking with a technician, track its status through completion
 - **Messaging**: Message a technician directly, tied to their profile
@@ -72,6 +78,10 @@ an existing admin only.
 - **Push notifications**: point `FIREBASE_CONFIG_PATH` at a real Firebase service account
 - **Email**: set `EMAIL_USERNAME`/`EMAIL_PASSWORD` to a real SMTP account
 - **SMS**: set `SMS_API_KEY` to a real Termii key
+- **Google sign-in**: set `GOOGLE_OAUTH_CLIENT_ID` (backend + web/mobile — the same value
+  everywhere, since it's checked as the ID token's audience, not a secret)
+- **Apple sign-in**: set `APPLE_OAUTH_CLIENT_ID` (web Service ID) and/or
+  `APPLE_OAUTH_BUNDLE_ID` (native — defaults to `com.techiefinder.app`)
 
 ### Planned (not yet built)
 - Content moderation beyond review removal (flagging, reports)
@@ -266,8 +276,10 @@ not aspirational names:
 | `DATABASE_URL` / `DATABASE_USERNAME` / `DATABASE_PASSWORD` | backend (prod) | MySQL connection |
 | `JWT_SECRET` | backend | Token signing key — must be ≥64 bytes (HS512) |
 | `CORS_ALLOWED_ORIGINS` | backend | Comma-separated allowed origins, defaults to `localhost:3000,5173,8080` |
-| `FILE_UPLOAD_DIR` | backend | Upload directory (feature not yet implemented) |
-| `PAYSTACK_*` / `FLUTTERWAVE_*` | backend | Reserved for real gateway integration (not yet wired up) |
+| `FILE_UPLOAD_DIR` | backend | Portfolio/certification upload directory |
+| `PAYSTACK_*` / `FLUTTERWAVE_*` / `PAYMENT_GATEWAY_PROVIDER` | backend | Real payment gateway integration — blank/`wallet` keeps the simulated instant settlement |
+| `GOOGLE_OAUTH_CLIENT_ID` | backend, web (`VITE_GOOGLE_CLIENT_ID`), mobile (`EXPO_PUBLIC_GOOGLE_CLIENT_ID`) | Google sign-in — same value on all three, blank hides the button |
+| `APPLE_OAUTH_CLIENT_ID` / `APPLE_OAUTH_BUNDLE_ID` | backend, web (`VITE_APPLE_CLIENT_ID`) | Apple sign-in — Service ID for web, bundle id (native default already matches) for mobile |
 | `EXPO_PUBLIC_API_URL` | mobile | Override the API base URL (emulator/device) |
 | `VITE_API_URL` | web | Override the API base URL for a built (non-dev) bundle |
 
@@ -282,10 +294,11 @@ cd backend
 mvn test
 ```
 
-8 tests: application context loads, auth (register/login/validation/duplicate-email/
-unauthenticated-access), and a full booking-lifecycle integration test (register →
-technician setup → category/geo search → book → confirm → pay → complete → rate →
-message → notifications).
+48 tests across 14 classes: auth (register/login/validation/duplicate-email/
+unauthenticated-access), social sign-in + refresh token (JWKS signature verification,
+account linking, not-configured fallback), a full booking-lifecycle integration test,
+the real payment gateway integration (and its safe fallback), portfolio/certification
+upload, technician recommendation ranking, and delivery-channel (push/email/SMS) clients.
 
 ### Mobile
 
@@ -294,15 +307,19 @@ cd mobile
 npm test
 ```
 
-7 tests covering `AuthContext` (session persistence, login/logout, error handling)
-and `LoginScreen` (validation, submit, error handling).
+38 tests covering `AuthContext` (session persistence, login/logout, social login,
+biometric unlock, error handling), `LoginScreen`/`RegisterScreen` (validation, submit,
+error handling), the Google/Apple sign-in buttons, and the biometric quick-unlock
+button/toggle/storage layer.
 
 ### Web
 
-No unit tests yet — CI runs a full production build (`npm run build`, which
-type-checks via `tsc -b`) on every push. The golden path (registration through
-booking, payment, rating, messaging, and notifications) has been verified with a
-Playwright-driven browser session against the real backend during development.
+23 tests (Vitest/RTL) covering `apiErrorMessage`, `AuthContext` (including social
+login), `ProtectedRoute`, `Login`, and the Google/Apple sign-in buttons — plus a full
+production build (`npm run build`, which type-checks via `tsc -b`) on every push. The
+golden path (registration through booking, payment, rating, messaging, and
+notifications) has additionally been verified with a Playwright-driven browser session
+against the real backend during development.
 
 ---
 
@@ -354,7 +371,8 @@ For a manual deployment:
 All endpoints are under `/api`. Endpoints not listed as public require a
 `Authorization: Bearer <token>` header.
 
-**Auth** (public): `POST /auth/register`, `POST /auth/login`
+**Auth** (public): `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`,
+`POST /auth/social/google`, `POST /auth/social/apple`
 
 **Public**: `GET /public/categories`, `GET /public/health`
 
@@ -436,17 +454,20 @@ For technical support or questions:
 - Technician portfolio photo and certification upload + admin verification workflow
 - Heuristic "recommended for you" technician ranking (rating, completion rate,
   proximity, category match, verification — transparent, not a black-box ML call)
-- Tests: backend (JUnit/MockMvc, 35 tests), mobile (Jest/RNTL, 10 tests),
-  web (Vitest/RTL, 14 tests)
+- Google/Apple sign-in (web + mobile) with account linking by email, plus a
+  `/api/auth/refresh` endpoint; mobile Face ID/Touch ID/fingerprint quick unlock
+  built on top of it
+- Tests: backend (JUnit/MockMvc, 48 tests), mobile (Jest/RNTL, 38 tests),
+  web (Vitest/RTL, 23 tests)
 - DevOps: Dockerfiles, docker-compose (incl. an uploads volume), CI (backend/mobile/web)
 
 ### Next
 - Mobile: portfolio/certification upload UI (web already has it)
 - Mobile: translate the rest of the app beyond the login screen
 - Content moderation beyond review removal (flagging, reports)
-- Real payment gateway / push / email / SMS credentials are a deployment
-  decision, not a code gap — see "Configurable, requires your own credentials"
-  above for what to set
+- Real payment gateway / push / email / SMS / Google / Apple credentials are a
+  deployment decision, not a code gap — see "Configurable, requires your own
+  credentials" above for what to set
 
 ### Later
 - Real-time in-app chat (currently polling-based)

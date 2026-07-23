@@ -30,7 +30,9 @@
     "submit": "Banye",
     "submitting": "Na-abanye...",
     "noAccount": "Ị nweghị akaụntụ?",
-    "signUp": "Debanye aha"
+    "signUp": "Debanye aha",
+    "or": "ma ọ bụ",
+    "continueWithApple": "Gaa n'ihu na Apple"
   },
   "register": {
     "title": "Mepụta akaụntụ gị",

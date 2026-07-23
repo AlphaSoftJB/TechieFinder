@@ -13,9 +13,13 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
+import GoogleSignInButton from '../components/GoogleSignInButton';
+import AppleSignInButton from '../components/AppleSignInButton';
+import { useBiometricOptIn } from '../hooks/useBiometricOptIn';
 
 export default function RegisterScreen({ navigation }: any) {
-  const { register } = useAuth();
+  const { register, loginWithGoogle, loginWithApple } = useAuth();
+  const { offerBiometricOptIn } = useBiometricOptIn();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -94,7 +98,7 @@ export default function RegisterScreen({ navigation }: any) {
 
     setLoading(true);
     try {
-      await register({
+      const auth = await register({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
@@ -103,6 +107,7 @@ export default function RegisterScreen({ navigation }: any) {
         role: formData.role,
       });
       // Navigation is handled automatically by AuthContext
+      offerBiometricOptIn(auth.refreshToken);
     } catch (error: any) {
       Alert.alert(
         'Registration Failed',
@@ -117,6 +122,28 @@ export default function RegisterScreen({ navigation }: any) {
   const updateFormData = (field: string, value: string) => {
     setFormData({ ...formData, [field]: value });
     setErrors({ ...errors, [field]: '' });
+  };
+
+  const handleGoogleToken = async (idToken: string) => {
+    try {
+      const auth = await loginWithGoogle(idToken, formData.role);
+      offerBiometricOptIn(auth.refreshToken);
+    } catch (error: any) {
+      Alert.alert('Registration Failed', error.message || 'Unable to sign in with Google.', [{ text: 'OK' }]);
+    }
+  };
+
+  const handleAppleToken = async (idToken: string, firstName?: string, lastName?: string) => {
+    try {
+      const auth = await loginWithApple(idToken, firstName, lastName, formData.role);
+      offerBiometricOptIn(auth.refreshToken);
+    } catch (error: any) {
+      Alert.alert('Registration Failed', error.message || 'Unable to sign in with Apple.', [{ text: 'OK' }]);
+    }
+  };
+
+  const handleSocialError = (message: string) => {
+    Alert.alert('Registration Failed', message, [{ text: 'OK' }]);
   };
 
   return (
@@ -334,6 +361,18 @@ export default function RegisterScreen({ navigation }: any) {
             )}
           </TouchableOpacity>
 
+          {/* Social sign-up -- hidden entirely on this build unless a client
+              id is configured for the platform (see .env.example) */}
+          <View style={styles.divider}>
+            <View style={styles.dividerLine} />
+            <Text style={styles.dividerText}>or</Text>
+            <View style={styles.dividerLine} />
+          </View>
+          <View style={styles.socialButtons}>
+            <GoogleSignInButton onToken={handleGoogleToken} onError={handleSocialError} />
+            <AppleSignInButton onToken={handleAppleToken} onError={handleSocialError} />
+          </View>
+
           {/* Login Link */}
           <View style={styles.loginContainer}>
             <Text style={styles.loginText}>Already have an account? </Text>
@@ -474,6 +513,25 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#ddd',
+  },
+  dividerText: {
+    marginHorizontal: 16,
+    fontSize: 14,
+    color: '#666',
+  },
+  socialButtons: {
+    gap: 12,
+    marginBottom: 24,
   },
   loginContainer: {
     flexDirection: 'row',

@@ -16,7 +16,9 @@
     "passwordRequired": "Achọrọ okwuntughe",
     "passwordTooShort": "Okwuntughe ga-adị opekempe mkpụrụedemede isii",
     "failedTitle": "Ịbanye Adaghị",
-    "failedDefault": "Email ma ọ bụ okwuntughe ezighi ezi. Biko nwaa ọzọ."
+    "failedDefault": "Email ma ọ bụ okwuntughe ezighi ezi. Biko nwaa ọzọ.",
+    "continueWithGoogle": "Gaa n'ihu na Google",
+    "googleSignInFailed": "Ịbanye Google dara. Biko nwaa ọzọ."
   },
   "language": {
     "label": "Asụsụ"

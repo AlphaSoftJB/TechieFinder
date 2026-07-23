@@ -40,6 +40,9 @@ services:
       - EMAIL_USERNAME=${EMAIL_USERNAME:-}
       - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
       - SMS_API_KEY=${SMS_API_KEY:-}
+      - GOOGLE_OAUTH_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID:-}
+      - APPLE_OAUTH_CLIENT_ID=${APPLE_OAUTH_CLIENT_ID:-}
+      - APPLE_OAUTH_BUNDLE_ID=${APPLE_OAUTH_BUNDLE_ID:-}
       # Passthrough form (no default): omitted from the container entirely if
       # unset in .env, so Spring's own property defaults apply. A mapped
       # "VAR=${VAR:-}" would instead pass an explicit empty string, which wins
@@ -55,6 +58,10 @@ services:
   web:
     build:
       context: ./web
+      args:
+        - VITE_GOOGLE_CLIENT_ID=${GOOGLE_OAUTH_CLIENT_ID:-}
+        - VITE_APPLE_CLIENT_ID=${APPLE_OAUTH_CLIENT_ID:-}
+        - VITE_APPLE_REDIRECT_URI=${APPLE_OAUTH_REDIRECT_URI:-}
     restart: unless-stopped
     depends_on:
       - backend

@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useAuth } from '../contexts/AuthContext';
 import api, { apiErrorMessage } from '../services/api';
+import BiometricUnlockToggle from '../components/BiometricUnlockToggle';
 
 const STATUS_COLORS: Record<string, string> = {
   PENDING: '#F59E0B',
@@ -194,6 +195,8 @@ export default function TechnicianDashboardScreen() {
           <Ionicons name="log-out-outline" size={22} color="#EF4444" />
         </TouchableOpacity>
       </View>
+
+      <BiometricUnlockToggle />
 
       <View style={styles.tabs}>
         {(['jobs', 'profile', 'notifications'] as const).map((t) => (

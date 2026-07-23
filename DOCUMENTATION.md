@@ -185,12 +185,25 @@ Expo-managed React Native app (Expo 54, React Native 0.81, React 19).
 
 ### Key Features
 Login/Register (login screen has a working en/yo/ig/ha language switcher via
-i18next), Home (categories + recommended technicians), Search (category +
-device-location "Near Me" via `expo-location`), Technician Profile (ratings,
+i18next, plus Google sign-in via `expo-auth-session`'s Google provider and
+Apple sign-in via `expo-apple-authentication`, both hidden unless a client id
+is configured), Home (categories + recommended technicians), Search (category
++ device-location "Near Me" via `expo-location`), Technician Profile (ratings,
 service offerings, portfolio photos, verified certifications, booking form,
 messaging), role-routed dashboards, Chat. Booking payment redirects to a real
 gateway checkout (`expo-web-browser`) when one is configured, otherwise
 settles instantly against the wallet simulation.
+
+**Biometric quick unlock**: after any login (password or social), the app
+offers to remember the session behind Face ID/Touch ID/fingerprint
+(`useBiometricOptIn` hook); a toggle on the account screen
+(`BiometricUnlockToggle`) lets the user turn it on/off later. The refresh
+token is stored via `expo-secure-store` with `requireAuthentication: true`,
+so the OS itself (Keychain/Keystore) — not just an app-level check — gates
+reading it back out; a plain `AsyncStorage` flag tracks on/off state so the
+UI can check it without triggering a prompt just to render. Each unlock
+rotates the stored token (`refreshStoredToken`) so quick unlock keeps working
+indefinitely rather than expiring after one use.
 
 ### Development Setup
 ```bash
@@ -213,7 +226,10 @@ placeholder value and needs to be set to a real project ID first.
 
 ### Entity Overview (18 entities)
 
-- **User** ↔ UserProfile (1:1), UserAddress (1:N), UserPaymentMethod (1:N)
+- **User** ↔ UserProfile (1:1), UserAddress (1:N), UserPaymentMethod (1:N).
+  `password` is nullable (social-only accounts authenticate entirely via a
+  verified Google/Apple ID token) and `authProvider`/`providerId` identify
+  which provider (if any) created the account.
 - **Technician** ↔ User (1:1), TechnicianService (1:N, "what I offer"),
   TechnicianAvailability (1:N), TechnicianLocation (1:1), TechnicianPortfolio
   (1:N), TechnicianCertification (1:N)
@@ -260,6 +276,30 @@ is recommended; `update` with no migration history has no rollback path.
   and populates the Spring Security context via `CustomUserDetailsService`
 - Access token expiry: 24h (`jwt.expiration`, ms); refresh token: 7d
   (`jwt.refresh.expiration`) — both configurable via env vars
+- `POST /api/auth/refresh` redeems a refresh token for a new access/refresh
+  pair without the password — used by the mobile app's biometric quick unlock
+
+### Social Sign-In (Google/Apple)
+- `POST /api/auth/social/google` and `POST /api/auth/social/apple` verify the
+  client-supplied ID token's signature against the provider's own published
+  JWKS (`GoogleIdTokenVerifierClient`/`AppleIdTokenVerifierClient`, backed by
+  a shared `JwksIdTokenVerifier` using `com.auth0:jwks-rsa` + jjwt's
+  `SigningKeyResolver` — no Google/Apple SDK dependency needed just to check
+  a signature) and its issuer/audience, then finds-or-creates the matching
+  `User` (`SocialAuthService`)
+- An identity with the same email as an existing LOCAL/other-provider account
+  links to it rather than creating a duplicate
+- Both clients follow the same `isConfigured()` safe-fallback pattern as the
+  payment gateways: blank `GOOGLE_OAUTH_CLIENT_ID`/(`APPLE_OAUTH_CLIENT_ID`
+  and `APPLE_OAUTH_BUNDLE_ID`) means the endpoint returns a clear 400 instead
+  of attempting verification, and both web/mobile hide their sign-in buttons
+  entirely when their own client-id env var is unset
+- Apple's ID token never includes a name, only email — the client passes
+  `firstName`/`lastName` through from the one-time native authorization
+  response if it wants one recorded on first sign-up
+- Attempting a password login (`POST /api/auth/login`) on a social-only
+  account (`password == null`) fails fast with a clear message rather than
+  comparing against a null BCrypt hash
 
 ### Password Security
 BCrypt via `PasswordEncoder` (Spring Security default strength).
@@ -339,6 +379,28 @@ POST /api/auth/register
 POST /api/auth/login
 { "email": "...", "password": "..." }
 → same shape as register
+# 400 if this account was created via Google/Apple sign-in (no password to check)
+
+POST /api/auth/refresh
+{ "refreshToken": "..." }
+→ same shape as register (a fresh access/refresh pair)
+# 401 if the refresh token is invalid/expired/for a suspended account
+
+POST /api/auth/social/google
+{ "idToken": "<a real Google-issued ID token>",
+  "role": "USER" | "TECHNICIAN"   # only used the first time this identity signs up
+}
+→ same shape as register
+# 400 if GOOGLE_OAUTH_CLIENT_ID isn't configured server-side
+
+POST /api/auth/social/apple
+{ "idToken": "<a real Apple-issued ID token>",
+  "firstName": "...", "lastName": "...",  # only used on first sign-up; Apple
+                                           # never puts a name in the token
+  "role": "USER" | "TECHNICIAN"
+}
+→ same shape as register
+# 400 if APPLE_OAUTH_CLIENT_ID/APPLE_OAUTH_BUNDLE_ID isn't configured server-side
 ```
 
 ### Public
@@ -477,7 +539,7 @@ leaked to clients).
 ## Testing Strategy
 
 ### Backend
-`mvn test` runs 12 classes / 35 tests:
+`mvn test` runs 14 classes / 48 tests:
 - `TechieFinderApplicationTests` — Spring context loads
 - `AuthControllerTest` (MockMvc) — register success/validation/duplicate-email,
   wrong-password login, unauthenticated access to a protected endpoint, guest
@@ -504,6 +566,18 @@ leaked to clients).
   unconfigured and no-op safely by default; flip to "configured" and actually
   attempt a send once real (non-placeholder) credentials are supplied, verified
   against a mocked `JavaMailSender` / `MockRestServiceServer` respectively
+- `JwksIdTokenVerifierTest` — signs real JWTs with a locally-generated RSA
+  key pair (standing in for Google's/Apple's actual signing keys) and a fake
+  `JwkProvider`, exercising the real signature/issuer/audience verification
+  logic without a network call to either provider
+- `SocialLoginAndRefreshTest` (MockMvc, `@MockBean` verifier clients) —
+  Google/Apple sign-in creates a new user on first login, reuses the same
+  user on a second login with the same provider identity, links to an
+  existing local account with the same email, returns 400 when not
+  configured, Apple's client-supplied name is recorded on first sign-up,
+  a social-only account's password login fails with a clear message, and
+  `/api/auth/refresh` issues a new token pair (or 401 for an invalid/expired
+  token or a suspended account)
 
 Several of these tests configure a distinct Spring context (`@TestPropertySource`
 overriding provider/credential properties), which is why each of those also
@@ -513,17 +587,26 @@ the base config points every context at the same *named* in-memory H2 database
 otherwise race to create/drop the same schema.
 
 ### Mobile
-`npm test` runs 3 suites / 10 tests (Jest + `@testing-library/react-native`):
-`AuthContext` (session persistence, login/logout, error surfacing), `LoginScreen`
-(validation, submit, error handling, i18n strings), and `RegisterScreen`
-(validation including password-mismatch, submit).
+`npm test` runs 8 suites / 38 tests (Jest + `@testing-library/react-native`):
+`AuthContext` (session persistence, login/logout, social login, refresh-token
+unlock, error surfacing), `LoginScreen`/`RegisterScreen` (validation, submit,
+error handling, i18n strings), `GoogleSignInButton`/`AppleSignInButton`
+(hidden when unconfigured, forwards the ID token, surfaces provider errors),
+`biometricAuth` (hardware/enrollment checks, enable/disable, token rotation,
+prompt-cancelled-returns-null), and `BiometricUnlockButton`/
+`BiometricUnlockToggle` (visibility rules, wiring to the auth flow). Google's
+`useIdTokenAuthRequest` and `expo-apple-authentication` are mocked globally
+(`jest.setup.js`) since their real behavior depends on native platform code
+Jest can't exercise meaningfully.
 
 ### Web
-`npm test` runs 4 suites / 14 tests (Vitest + `@testing-library/react`):
+`npm test` runs 6 suites / 23 tests (Vitest + `@testing-library/react`):
 `apiErrorMessage` (pure function), `AuthContext` (session persistence,
-login/logout), `ProtectedRoute` (auth + role-gating redirects), `Login` page
-(submit, error display). CI (`.github/workflows/ci.yml`) runs these plus a full
-production build (`tsc -b && vite build`) on every push.
+login/logout, social login), `ProtectedRoute` (auth + role-gating redirects),
+`Login` page (submit, error display, social buttons hidden when unconfigured),
+and `GoogleSignInButton`/`AppleSignInButton` (script-loading, credential
+forwarding, error handling). CI (`.github/workflows/ci.yml`) runs these plus a
+full production build (`tsc -b && vite build`) on every push.
 
 The golden path plus every feature added this round was also verified with a
 Playwright script driving the live backend + web dev server end-to-end:
@@ -537,12 +620,21 @@ of portfolio/certifications, and the web language switcher.
 
 ## Known Limitations
 
-- **Real payment gateway / push / email / SMS need your own credentials** —
-  each is fully implemented (real Paystack/Flutterwave HTTP integration,
-  Firebase Admin SDK, JavaMailSender, Termii HTTP client) but degrades to a
-  safe no-op/simulation without real (non-placeholder) credentials configured.
-  This is a deployment step, not a missing feature — see the README's
-  "Configurable, requires your own credentials" section
+- **Real payment gateway / push / email / SMS / Google / Apple need your own
+  credentials** — each is fully implemented (real Paystack/Flutterwave HTTP
+  integration, Firebase Admin SDK, JavaMailSender, Termii HTTP client, JWKS
+  signature verification against Google's/Apple's real public keys) but
+  degrades to a safe no-op/simulation, or hides its UI entirely, without real
+  credentials configured. This is a deployment step, not a missing feature —
+  see the README's "Configurable, requires your own credentials" section
+- **Google/Apple sign-in and mobile biometric quick unlock haven't been
+  exercised against a live Google/Apple account or a real device in this
+  environment** — the JWT signature/issuer/audience verification, account
+  linking, and refresh-token/SecureStore logic are covered by real tests
+  (see Testing Strategy), but there's no substitute for a real Google Cloud/
+  Apple Developer app registration and a physical device's Face ID/Touch ID/
+  fingerprint sensor; do a manual pass with real credentials before depending
+  on this in production
 - **Admin dashboard moderation is basic** — reviews can only be removed
   outright (no flagging/reporting workflow), and there's no audit log of
   admin actions (suspensions, verification changes, deletions)

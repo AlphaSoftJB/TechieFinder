@@ -2,9 +2,12 @@ import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth, type UserRole } from '../contexts/AuthContext';
+import GoogleSignInButton from '../components/GoogleSignInButton';
+import AppleSignInButton from '../components/AppleSignInButton';
+import { appleClientId, googleClientId } from '../lib/socialAuth';
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, loginWithGoogle, loginWithApple } = useAuth();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [form, setForm] = useState({
@@ -12,6 +15,8 @@ export default function Register() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const hasSocialSignIn = !!googleClientId() || !!appleClientId();
 
   const update = (field: string, value: string) => setForm({ ...form, [field]: value });
 
@@ -26,6 +31,26 @@ export default function Register() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleToken = async (idToken: string) => {
+    setError('');
+    try {
+      await loginWithGoogle(idToken, form.role);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleAppleToken = async (idToken: string, firstName?: string, lastName?: string) => {
+    setError('');
+    try {
+      await loginWithApple(idToken, firstName, lastName, form.role);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.message);
     }
   };
 
@@ -94,6 +119,20 @@ export default function Register() {
         >
           {loading ? t('register.submitting') : t('register.submit')}
         </button>
+
+        {hasSocialSignIn && (
+          <>
+            <div className="flex items-center gap-3">
+              <div className="h-px flex-1 bg-neutral-200" />
+              <span className="text-xs text-neutral-400">{t('login.or')}</span>
+              <div className="h-px flex-1 bg-neutral-200" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <GoogleSignInButton onToken={handleGoogleToken} onError={setError} />
+              <AppleSignInButton onToken={handleAppleToken} onError={setError} />
+            </div>
+          </>
+        )}
       </form>
 
       <p className="text-center text-sm text-neutral-500">

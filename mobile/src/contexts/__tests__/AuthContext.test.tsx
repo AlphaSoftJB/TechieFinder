@@ -79,6 +79,81 @@ describe('AuthContext', () => {
     expect(result.current.isAuthenticated).toBe(false);
   });
 
+  it('loginWithGoogle stores the session returned by the social endpoint', async () => {
+    (api.post as jest.Mock).mockResolvedValueOnce({
+      data: {
+        accessToken: 'g-token', refreshToken: 'g-refresh', userId: 2,
+        email: 'grace@example.com', firstName: 'Grace', lastName: 'Hopper', role: 'USER',
+      },
+    });
+
+    const { result } = await renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.loginWithGoogle('fake-google-id-token');
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user?.firstName).toBe('Grace');
+    expect(api.post).toHaveBeenCalledWith('/auth/social/google', { idToken: 'fake-google-id-token', role: undefined });
+  });
+
+  it('loginWithApple passes the client-supplied name through to the backend', async () => {
+    (api.post as jest.Mock).mockResolvedValueOnce({
+      data: {
+        accessToken: 'a-token', refreshToken: 'a-refresh', userId: 3,
+        email: 'katherine@example.com', firstName: 'Katherine', lastName: 'Johnson', role: 'USER',
+      },
+    });
+
+    const { result } = await renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.loginWithApple('fake-apple-id-token', 'Katherine', 'Johnson');
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(api.post).toHaveBeenCalledWith('/auth/social/apple', {
+      idToken: 'fake-apple-id-token', firstName: 'Katherine', lastName: 'Johnson', role: undefined,
+    });
+  });
+
+  it('unlockWithRefreshToken redeems a stored refresh token for a new session', async () => {
+    (api.post as jest.Mock).mockResolvedValueOnce({
+      data: {
+        accessToken: 'new-token', refreshToken: 'new-refresh', userId: 1,
+        email: 'test@example.com', firstName: 'Ada', lastName: 'Lovelace', role: 'USER',
+      },
+    });
+
+    const { result } = await renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await act(async () => {
+      await result.current.unlockWithRefreshToken('stored-refresh-token');
+    });
+
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(api.post).toHaveBeenCalledWith('/auth/refresh', { refreshToken: 'stored-refresh-token' });
+  });
+
+  it('unlockWithRefreshToken surfaces a friendly message when the token is rejected', async () => {
+    (api.post as jest.Mock).mockRejectedValueOnce({ response: { status: 401 } });
+
+    const { result } = await renderHook(() => useAuth(), { wrapper });
+    await waitFor(() => expect(result.current.loading).toBe(false));
+
+    await expect(
+      act(async () => {
+        await result.current.unlockWithRefreshToken('expired-token');
+      })
+    ).rejects.toThrow('Your session expired. Please log in again.');
+
+    expect(result.current.isAuthenticated).toBe(false);
+  });
+
   it('logout clears the stored session', async () => {
     (api.post as jest.Mock).mockResolvedValueOnce({
       data: {
