@@ -48,13 +48,49 @@ describe('AppleSignInButton', () => {
     await waitFor(() => expect(onToken).toHaveBeenCalledWith('apple-id-token', 'Katherine', 'Johnson'));
   });
 
-  it('reports an error when the Apple script fails to load', async () => {
+  it('hides itself (no scary error banner) when the Apple script fails to load', async () => {
     mockClientId = 'com.techiefinder.web';
     mockLoadAppleScript.mockRejectedValue(new Error('offline'));
 
     const onError = vi.fn();
+    const onAvailabilityChange = vi.fn();
+    const { container } = render(
+      <AppleSignInButton onToken={vi.fn()} onError={onError} onAvailabilityChange={onAvailabilityChange} />
+    );
+
+    await waitFor(() => expect(container).toBeEmptyDOMElement());
+    expect(onError).not.toHaveBeenCalled();
+    expect(onAvailabilityChange).toHaveBeenCalledWith(false);
+  });
+
+  it('reports an error when sign-in itself fails for a reason other than the user cancelling', async () => {
+    mockClientId = 'com.techiefinder.web';
+    const init = vi.fn();
+    const signIn = vi.fn().mockRejectedValue({ error: 'invalid_client' });
+    (window as any).AppleID = { auth: { init, signIn } };
+    mockLoadAppleScript.mockResolvedValue(undefined);
+
+    const onError = vi.fn();
     render(<AppleSignInButton onToken={vi.fn()} onError={onError} />);
 
-    await waitFor(() => expect(onError).toHaveBeenCalled());
+    await waitFor(() => expect(init).toHaveBeenCalled());
+    await userEvent.click(await screen.findByTestId('apple-signin-button'));
+    await waitFor(() => expect(onError).toHaveBeenCalledWith('Apple sign-in failed. Please try again.'));
+  });
+
+  it('does not report an error when the user simply cancels the native sheet', async () => {
+    mockClientId = 'com.techiefinder.web';
+    const init = vi.fn();
+    const signIn = vi.fn().mockRejectedValue({ error: 'user_cancelled_authorize' });
+    (window as any).AppleID = { auth: { init, signIn } };
+    mockLoadAppleScript.mockResolvedValue(undefined);
+
+    const onError = vi.fn();
+    render(<AppleSignInButton onToken={vi.fn()} onError={onError} />);
+
+    await waitFor(() => expect(init).toHaveBeenCalled());
+    await userEvent.click(await screen.findByTestId('apple-signin-button'));
+    await waitFor(() => expect(signIn).toHaveBeenCalled());
+    expect(onError).not.toHaveBeenCalled();
   });
 });

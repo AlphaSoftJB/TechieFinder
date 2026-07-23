@@ -18,7 +18,7 @@ describe('GoogleSignInButton', () => {
   });
 
   it('renders nothing when no client id is configured', () => {
-    const { container } = render(<GoogleSignInButton onToken={vi.fn()} onError={vi.fn()} />);
+    const { container } = render(<GoogleSignInButton onToken={vi.fn()} />);
     expect(container).toBeEmptyDOMElement();
     expect(mockLoadGoogleScript).not.toHaveBeenCalled();
   });
@@ -31,7 +31,7 @@ describe('GoogleSignInButton', () => {
     mockLoadGoogleScript.mockResolvedValue(undefined);
 
     const onToken = vi.fn();
-    render(<GoogleSignInButton onToken={onToken} onError={vi.fn()} />);
+    render(<GoogleSignInButton onToken={onToken} />);
 
     await waitFor(() => expect(initialize).toHaveBeenCalledWith(
       expect.objectContaining({ client_id: 'test-client-id.apps.googleusercontent.com' })
@@ -43,13 +43,20 @@ describe('GoogleSignInButton', () => {
     expect(onToken).toHaveBeenCalledWith('signed-id-token');
   });
 
-  it('reports an error when the Google script fails to load', async () => {
+  it('hides itself (no scary error banner) when the Google script fails to load', async () => {
     mockClientId = 'test-client-id.apps.googleusercontent.com';
     mockLoadGoogleScript.mockRejectedValue(new Error('offline'));
 
-    const onError = vi.fn();
-    render(<GoogleSignInButton onToken={vi.fn()} onError={onError} />);
+    const onAvailabilityChange = vi.fn();
+    const { container } = render(<GoogleSignInButton onToken={vi.fn()} onAvailabilityChange={onAvailabilityChange} />);
 
-    await waitFor(() => expect(onError).toHaveBeenCalled());
+    await waitFor(() => expect(container).toBeEmptyDOMElement());
+    expect(onAvailabilityChange).toHaveBeenCalledWith(false);
+  });
+
+  it('reports itself as unavailable immediately when no client id is configured', () => {
+    const onAvailabilityChange = vi.fn();
+    render(<GoogleSignInButton onToken={vi.fn()} onAvailabilityChange={onAvailabilityChange} />);
+    expect(onAvailabilityChange).toHaveBeenCalledWith(false);
   });
 });

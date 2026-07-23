@@ -6,7 +6,9 @@
     "login": "Shiga",
     "signup": "Yi Rijista",
     "logout": "Fita",
-    "hi": "Sannu, {{name}}"
+    "hi": "Sannu, {{name}}",
+    "openMenu": "Bude menu",
+    "closeMenu": "Rufe menu"
   },
   "footer": {
     "tagline": "TechieFinder — tana haɗa 'yan Najeriya da ƙwararrun ma'aikata a unguwanninsu."
@@ -32,7 +34,8 @@
     "noAccount": "Ba ka da asusu?",
     "signUp": "Yi rijista",
     "or": "ko",
-    "continueWithApple": "Ci gaba da Apple"
+    "continueWithApple": "Ci gaba da Apple",
+    "appleSignInFailed": "Shiga ta Apple ya kasa. Da fatan za a sake gwadawa."
   },
   "register": {
     "title": "Ƙirƙiri asusunka",

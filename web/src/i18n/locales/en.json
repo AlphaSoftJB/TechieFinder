@@ -6,7 +6,9 @@
     "login": "Log in",
     "signup": "Sign up",
     "logout": "Log out",
-    "hi": "Hi, {{name}}"
+    "hi": "Hi, {{name}}",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "footer": {
     "tagline": "TechieFinder — connecting Nigerians with skilled local technicians."
@@ -32,7 +34,8 @@
     "noAccount": "Don't have an account?",
     "signUp": "Sign up",
     "or": "or",
-    "continueWithApple": "Continue with Apple"
+    "continueWithApple": "Continue with Apple",
+    "appleSignInFailed": "Apple sign-in failed. Please try again."
   },
   "register": {
     "title": "Create your account",

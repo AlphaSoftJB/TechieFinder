@@ -15,8 +15,14 @@ export default function Register() {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleAvailable, setGoogleAvailable] = useState(!!googleClientId());
+  const [appleAvailable, setAppleAvailable] = useState(!!appleClientId());
 
-  const hasSocialSignIn = !!googleClientId() || !!appleClientId();
+  const configuredForSocialSignIn = !!googleClientId() || !!appleClientId();
+  // Only shows the "or" divider once at least one button is actually going
+  // to render -- otherwise a visitor whose network/ad-blocker blocks both
+  // Google's and Apple's SDKs would see a divider pointing at nothing.
+  const showSocialDivider = configuredForSocialSignIn && (googleAvailable || appleAvailable);
 
   const update = (field: string, value: string) => setForm({ ...form, [field]: value });
 
@@ -120,16 +126,18 @@ export default function Register() {
           {loading ? t('register.submitting') : t('register.submit')}
         </button>
 
-        {hasSocialSignIn && (
+        {configuredForSocialSignIn && (
           <>
-            <div className="flex items-center gap-3">
-              <div className="h-px flex-1 bg-neutral-200" />
-              <span className="text-xs text-neutral-400">{t('login.or')}</span>
-              <div className="h-px flex-1 bg-neutral-200" />
-            </div>
+            {showSocialDivider && (
+              <div className="flex items-center gap-3">
+                <div className="h-px flex-1 bg-neutral-200" />
+                <span className="text-xs text-neutral-400">{t('login.or')}</span>
+                <div className="h-px flex-1 bg-neutral-200" />
+              </div>
+            )}
             <div className="flex flex-col gap-2">
-              <GoogleSignInButton onToken={handleGoogleToken} onError={setError} />
-              <AppleSignInButton onToken={handleAppleToken} onError={setError} />
+              <GoogleSignInButton onToken={handleGoogleToken} onAvailabilityChange={setGoogleAvailable} />
+              <AppleSignInButton onToken={handleAppleToken} onError={setError} onAvailabilityChange={setAppleAvailable} />
             </div>
           </>
         )}

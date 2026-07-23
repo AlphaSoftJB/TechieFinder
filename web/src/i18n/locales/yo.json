@@ -6,7 +6,9 @@
     "login": "Wọlé",
     "signup": "Forúkọsílẹ̀",
     "logout": "Jáde",
-    "hi": "Bawo, {{name}}"
+    "hi": "Bawo, {{name}}",
+    "openMenu": "Ṣí àtòjọ",
+    "closeMenu": "Ti àtòjọ"
   },
   "footer": {
     "tagline": "TechieFinder — ń so àwọn ará Nàìjíríà pọ̀ mọ́ àwọn oníṣẹ́-ọwọ́ tó mọṣẹ́ ní àdúgbò wọn."
@@ -32,7 +34,8 @@
     "noAccount": "Ò ò ní àkántì?",
     "signUp": "Forúkọsílẹ̀",
     "or": "tabi",
-    "continueWithApple": "Tẹ̀síwájú pẹ̀lú Apple"
+    "continueWithApple": "Tẹ̀síwájú pẹ̀lú Apple",
+    "appleSignInFailed": "Ìwọlé Apple kùnà. Jọ̀wọ́ gbìyànjú lẹ́ẹ̀kansí."
   },
   "register": {
     "title": "Ṣẹ̀dá àkántì rẹ",

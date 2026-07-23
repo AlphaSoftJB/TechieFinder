@@ -6,7 +6,9 @@
     "login": "Banye",
     "signup": "Debanye Aha",
     "logout": "Pụọ",
-    "hi": "Ndewo, {{name}}"
+    "hi": "Ndewo, {{name}}",
+    "openMenu": "Meghee menu",
+    "closeMenu": "Mechie menu"
   },
   "footer": {
     "tagline": "TechieFinder — na-ejikọ ndị Naijirịa na ndị ọrụ aka nwere nka n'ógbè ha."
@@ -32,7 +34,8 @@
     "noAccount": "Ị nweghị akaụntụ?",
     "signUp": "Debanye aha",
     "or": "ma ọ bụ",
-    "continueWithApple": "Gaa n'ihu na Apple"
+    "continueWithApple": "Gaa n'ihu na Apple",
+    "appleSignInFailed": "Ịbanye Apple dara. Biko nwaa ọzọ."
   },
   "register": {
     "title": "Mepụta akaụntụ gị",
